@@ -26,9 +26,10 @@ class ProductForm(forms.ModelForm):
         fields = [
             
             'name', 'description', 'price', 'quantity', 'category',
-            'height_cm', 'width_cm', 'material', 'finish', 'date_of_delivery',
+            'height_cm', 'width_cm', 'material', 'date_of_delivery',
             'image', 'imageuno', 'imagedos', 'imagetres', 'proveedor'
         ]
+        
         widgets = {
             'proveedor': forms.Select(attrs={'class': 'form-control'}),
             'name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -39,7 +40,6 @@ class ProductForm(forms.ModelForm):
             'height_cm': forms.NumberInput(attrs={'class': 'form-control'}),
             'width_cm': forms.NumberInput(attrs={'class': 'form-control'}),
             'material': forms.Select(attrs={'class': 'form-control'}),
-            'finish': forms.Select(attrs={'class': 'form-control'}),
             'date_of_delivery': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'image': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'imageuno': forms.ClearableFileInput(attrs={'class': 'form-control'}),
@@ -52,7 +52,7 @@ class ProductEditForm(forms.ModelForm):
         model = Product
         fields = [
             'name', 'description', 'price', 'offer', 'offer_price', 'quantity',
-            'category', 'height_cm', 'width_cm', 'material', 'finish', 'date_of_delivery',
+            'category', 'height_cm', 'width_cm', 'material', 'date_of_delivery',
             'image', 'imageuno', 'imagedos', 'imagetres', 'proveedor'
         ]
         widgets = {

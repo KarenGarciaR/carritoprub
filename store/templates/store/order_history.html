@@ -33,25 +33,35 @@
                       {% endif %}
                     </td>
                   {% endif %}
+
                   <td>
                     {% with order.orderitem_set.first as order_item %}
                       {{ order_item.product.date_of_delivery|date:"d/m/Y" }}
                     {% endwith %}
-                  </td>                  
+                  </td>
+
                   <td>
-                    {% if order.status == "Pendiente" %}
+                    {% if order.status|lower == "pendiente" %}
                       <span class="badge bg-warning text-dark">Pendiente</span>
-                    {% elif order.status == "Enviado" %}
+                    {% elif order.status|lower == "enviado" %}
                       <span class="badge bg-info text-dark">Enviado</span>
-                    {% elif order.status == "Entregado" %}
+                    {% elif order.status|lower == "entregado" %}
                       <span class="badge bg-success">Entregado</span>
+                    {% elif order.status|lower == "cancelado" %}
+                      <span class="badge bg-danger text-white">Cancelado</span>
                     {% else %}
                       <span class="badge bg-secondary">{{ order.status }}</span>
                     {% endif %}
                   </td>
+
                   <td>${{ order.get_cart_total|floatformat:2 }}</td>
+
                   <td>
+                    <!-- Botón Ver Detalles -->
                     <a href="{% url 'order_detail' order.id %}" class="btn btn-sm btn-outline-primary">Ver Detalles</a>
+                    {% if order.status|lower == "pendiente" or order.status|lower == "enviado" %}
+                      <br><small class="text-info mt-1 d-block">Cancelar desde detalles</small>
+                    {% endif %}
                   </td>
                 </tr>
               {% endfor %}

@@ -58,24 +58,26 @@ class Customer(models.Model):
 
 class Product(models.Model):
     CATEGORY_CHOICES = [
-        ('Animales', 'Animales'),
-        ('Arte Digital', 'Arte Digital'),
-        ('Frases Motivadoras', 'Frases Motivadoras'),
+        ('Sujeción y Soporte', 'Sujeción y Soporte'),
+        ('Motor y Transmisión', 'Motor y Transmisión'),
+        ('Sistema hidraulico y Neumatico', 'Sistema hidraulico y Neumatico'),
+        ('Bujes y Casquillos', 'Bujes y Casquillos'),
+        ('Sistema de Frenos', 'Sistema de Frenos'),
+        ('Accesorios y Misceláneos', 'Accesorios y Misceláneos'),
     ]
     MATERIAL_CHOICES = [
-        ('Vinil', 'Vinil'),
-        ('Papel Adhesivo', 'Papel Adhesivo'),
-        ('Transparente', 'Transparente'),
-        ('Holográfico', 'Holográfico'),
+        ('Acero', 'Acero'),
+        ('Hierro fundido', 'Hierro fundido'),
+        ('Bronce / Latón', 'Bronce / Latón'),
+        ('Aluminio', 'Aluminio'),
+        ('Goma / Poliuretano', 'Goma / Poliuretano'),
         ('Otro', 'Otro'),
     ]
-    FINISH_CHOICES = [
-        ('Mate', 'Mate'),
-        ('Brillante', 'Brillante'),
-    ]
+    
+
 
     PROVEEDOR_CHOICES = [
-        ('Stickimy', 'Stickimy'),
+        ('Productos Almeyda', 'Productos Almeyda'),
     ]
 
     proveedor = models.CharField(max_length=100, choices=PROVEEDOR_CHOICES)
@@ -90,7 +92,6 @@ class Product(models.Model):
     height_cm = models.FloatField()
     width_cm = models.FloatField()
     material = models.CharField(max_length=50, choices=MATERIAL_CHOICES)
-    finish = models.CharField(max_length=50, choices=FINISH_CHOICES)
     likes = models.ManyToManyField(User, related_name='liked_products', blank=True)
     date_of_delivery = models.DateField(null=True, blank=True)
 
@@ -170,7 +171,14 @@ class OrderItem(models.Model):
 
     @property
     def get_total(self):
-        return (self.product.offer_price if self.product.offer else self.product.price) * self.quantity
+        if not self.product:  # Si no hay producto
+            return 0
+        
+        if self.product.offer and self.product.offer_price is not None:
+            return self.product.offer_price * self.quantity
+        
+        return self.product.price * self.quantity
+
 
 class OrderHistory(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

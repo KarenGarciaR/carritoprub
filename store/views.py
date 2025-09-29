@@ -4,6 +4,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseForbidden, JsonResponse
 import json
 import datetime
+from django.utils import timezone
 from .models import * 
 from .utils import cookieCart, cartData, guestOrder
 from .forms import ProductEditForm, SignupForm, LoginForm
@@ -163,11 +164,14 @@ def order_history(request):
     cartItems = data['cartItems']
 
     if request.user.is_staff:
-        # Solo mostrar órdenes que tienen al menos un item
-        orders = Order.objects.filter(orderitem__isnull=False).order_by('-date_ordered')
+        # Admin ve todas las órdenes completadas
+        orders = Order.objects.filter(complete=True).order_by('-date_ordered')
     else:
-        # Filtrar por el usuario y mostrar solo órdenes con productos
-        orders = Order.objects.filter(customer__user=request.user, orderitem__isnull=False).order_by('-date_ordered')
+        # Cliente solo ve sus órdenes completadas (pagadas)
+        orders = Order.objects.filter(
+            customer__user=request.user, 
+            complete=True
+        ).order_by('-date_ordered')
     
     return render(request, 'store/order_history.html', {'orders': orders, 'cartItems': cartItems})
 
@@ -194,7 +198,6 @@ def add_product(request):
         form = ProductForm(initial={'seller': request.user})  # Inicializa el formulario con el usuario actual
 
     return render(request, 'store/addProduct.html', {'form': form, 'cartItems': cartItems})
-
 # Vistas de de historial de productos
 @login_required
 def product_history(request):
@@ -204,6 +207,145 @@ def product_history(request):
     products = Product.objects.filter(seller=request.user)
     
     return render(request, 'store/productHistory.html', {'products': products, 'cartItems': cartItems})
+
+@login_required
+def cancel_order(request, order_id):
+    order = get_object_or_404(Order, id=order_id, customer__user=request.user)
+
+    # Estados que permiten cancelación
+    cancelable_statuses = ["Pendiente", "Procesando"]
+    
+    if order.status in cancelable_statuses:
+        # Solo permitir cancelación si el pedido está completo (fue pagado)
+        if not order.complete:
+            messages.error(request, "Este pedido aún no ha sido finalizado y no puede ser cancelado.")
+            return redirect("order_history")
+            
+        # Si el pedido ya fue pagado (complete=True), requiere reembolso
+        if order.complete:
+            order.status = "Reembolso_Pendiente"
+            order.refund_requested_date = timezone.now()
+            
+            # Obtener motivo de cancelación del POST
+            order.refund_reason = request.POST.get('cancel_reason', 'Cliente solicitó cancelación')
+            
+            order.save()
+            
+            # Crear notificación para el usuario
+            Notification.objects.create(
+                user=request.user,
+                message=f"Tu solicitud de reembolso para el pedido #{order.id} ha sido enviada. Los artículos deben ser devueltos para evaluación."
+            )
+            
+            messages.success(request, 
+                "Tu solicitud de reembolso ha sido enviada. "
+                "Deberás devolver los artículos para que sean evaluados. "
+                "El reembolso se procesará una vez confirmado el buen estado de los productos."
+            )
+            
+    else:
+        if order.status == "Cancelado":
+            messages.info(request, "Este pedido ya está cancelado.")
+        elif order.status == "Reembolso_Pendiente":
+            messages.info(request, "Este pedido ya tiene un reembolso pendiente.")
+        elif order.status == "Reembolsado":
+            messages.info(request, "Este pedido ya fue reembolsado.")
+        elif order.status in ["Enviado", "Entregado"]:
+            messages.error(request, "No puedes cancelar un pedido que ya ha sido enviado o entregado.")
+        else:
+            messages.error(request, "Este pedido no se puede cancelar en su estado actual.")
+
+    return redirect("order_history")
+
+@staff_member_required
+def process_refund(request, order_id):
+    """Procesar reembolso - solo para administradores"""
+    order = get_object_or_404(Order, id=order_id)
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'approve' and order.status == 'Reembolso_Pendiente':
+            # Restaurar stock
+            for item in order.orderitem_set.all():
+                if item.product:
+                    item.product.quantity += item.quantity
+                    item.product.save()
+            
+            # Actualizar orden
+            order.status = 'Reembolsado'
+            order.refund_processed_date = timezone.now()
+            order.save()
+            
+            # Notificar al cliente
+            Notification.objects.create(
+                user=order.customer.user,
+                message=f"Tu reembolso del pedido #{order.id} ha sido procesado exitosamente."
+            )
+            
+            messages.success(request, f"Reembolso del pedido #{order.id} procesado exitosamente.")
+            
+        elif action == 'reject' and order.status == 'Reembolso_Pendiente':
+            # Rechazar reembolso - volver a estado anterior
+            reject_reason = request.POST.get('reject_reason', 'No especificado')
+            order.status = 'Entregado'  # Asumir que ya fue entregado
+            order.refund_reason += f"\n\nReembolso rechazado: {reject_reason}"
+            order.save()
+            
+            # Notificar al cliente
+            Notification.objects.create(
+                user=order.customer.user,
+                message=f"Tu solicitud de reembolso del pedido #{order.id} fue rechazada. Motivo: {reject_reason}"
+            )
+            
+            messages.info(request, f"Solicitud de reembolso del pedido #{order.id} rechazada.")
+    
+    return redirect('admin_refunds')
+
+@staff_member_required
+def admin_refunds(request):
+    """Lista de reembolsos pendientes para administradores"""
+    data = cartData(request)
+    cartItems = data['cartItems']
+    
+    pending_refunds = Order.objects.filter(status='Reembolso_Pendiente').order_by('-refund_requested_date')
+    processed_refunds = Order.objects.filter(status='Reembolsado').order_by('-refund_processed_date')[:10]
+    
+    context = {
+        'pending_refunds': pending_refunds,
+        'processed_refunds': processed_refunds,
+        'cartItems': cartItems
+    }
+    
+    return render(request, 'store/admin_refunds.html', context)
+
+@login_required
+def clear_cart(request):
+    """Vaciar carrito actual (cancelar pedido pendiente)"""
+    try:
+        customer = request.user.customer
+        order = Order.objects.filter(customer=customer, complete=False).first()
+        
+        if order:
+            # Restaurar stock
+            for item in order.orderitem_set.all():
+                if item.product:
+                    item.product.quantity += item.quantity
+                    item.product.save()
+            
+            # Eliminar items del carrito
+            order.orderitem_set.all().delete()
+            order.delete()
+            
+            messages.success(request, "Tu carrito ha sido vaciado y el stock restaurado.")
+        else:
+            messages.info(request, "No tienes un carrito activo.")
+            
+    except Customer.DoesNotExist:
+        messages.error(request, "Error: No tienes un perfil de cliente asociado.")
+    
+    return redirect("cart")
+
 
 # Vista de la tienda
 def store(request):
@@ -296,14 +438,46 @@ def checkout(request):
     items = data['items']
     customer = request.user.customer
 
+    # Verificar que hay items en el carrito
+    if not items:
+        messages.error(request, 'Tu carrito está vacío.')
+        return redirect('cart')
+
     if request.method == 'POST':
         try:
-            OrderHistory.objects.create(user=request.user, order=order)
+            # Debug: Verificar qué datos llegan
+            print(f"DEBUG - Procesando pago para orden {order.id}")
+            print(f"DEBUG - Estado actual: {order.status}")
+            print(f"DEBUG - Complete actual: {order.complete}")
+            
+            # Guardar método de pago
+            payment_method = request.POST.get('payment_method')
+            if payment_method:
+                order.payment_method = payment_method
+                print(f"DEBUG - Método de pago: {payment_method}")
+            
+            # Actualizar orden actual - SIMULAR PAGO EFECTUADO
             order.complete = True
-            order.status = "En espera de envío"
+            order.status = "Procesando"  # PAGO CONFIRMADO - PREPARANDO ENVÍO
             order.save()
-            messages.success(request, '¡Pago realizado con éxito! Tu pedido ha sido registrado.')
+            
+            print(f"DEBUG - Nuevo estado: {order.status}")
+            print(f"DEBUG - Nuevo complete: {order.complete}")
+            
+            # Crear historial
+            OrderHistory.objects.create(user=request.user, order=order)
+            
+            # IMPORTANTE: Crear una nueva orden vacía para el siguiente carrito
+            # Esto asegura que cada compra sea independiente
+            new_order = Order.objects.create(
+                customer=customer,
+                complete=False,
+                status="Pendiente"
+            )
+            
+            messages.success(request, f'¡Pago realizado con éxito! Tu pedido #{order.id} está siendo preparado para envío.')
             return redirect('order_history')
+            
         except Exception as e:
             messages.error(request, f'Ocurrió un error al procesar el pago: {e}')
             return redirect('checkout')
@@ -442,6 +616,7 @@ def delete_product(request, product_id):
         return redirect('productHistory')  # Redirige a la lista de productos del vendedor
 
     return render(request, 'store/confirm_delete.html', {'product': product})
+
 
 # Vista de detalles del pedido
 @login_required

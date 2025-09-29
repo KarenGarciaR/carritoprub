@@ -50,7 +50,7 @@
         <li class="list-group-item"><strong>Dimensiones:</strong> {{ product.height_cm }}×{{ product.width_cm }} cm</li>
         <li class="list-group-item"><strong>Material:</strong> {{ product.material }}</li>
         <li class="list-group-item"><strong>Acabado:</strong> {{ product.finish }}</li>
-        <li class="list-group-item"><strong>Proveedor:</strong> <h6 style="color: #CB4C4C; font-weight: 800;"> {{ product.proveedor}}</h6></li>
+        <li class="list-group-item"><strong>Proveedor:</strong> <h6 style="color: #e9820d; font-weight: 800;"> {{ product.proveedor}}</h6></li>
       </ul>
 
       <!-- Botones de acción -->
@@ -62,7 +62,7 @@
             {% else %}
                 <button data-product="{{product.id}}" data-action="add"
                         class="btn btn-danger rounded-pill px-4 update-cart"
-                        style="background-color: #CB4C4C; color: white;"
+                        style="background-color: #e9820d; color: white;"
                         onmouseover="this.style.backgroundColor='#A03A3A';"
                         onmouseout="this.style.backgroundColor='#CB4C4C';">
                     <i class="bi bi-cart-plus me-2"></i> Agregar al carrito

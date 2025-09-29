@@ -10,7 +10,7 @@
     integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-  <title>Stikckimy</title>
+  <title>ALM: Suspenciones y Componentes</title>
 </head>
 
 <body class="">
@@ -30,19 +30,19 @@
   <nav class="navbar bg-light navbar-expand-lg fixed-top">
     <div class="container-fluid">
       <a class="navbar-brand {% if not request.user.is_authenticated %}disabled{% endif %}"
-        href="{% if request.user.is_authenticated %}{% url 'store' %}{% else %}{% url 'store' %}{% endif %}"><img src="../../../static/images/Logostickimy.jpg" style="width: 70px; height: 45px; border-radius: 5px;" alt=""></a>
+        href="{% if request.user.is_authenticated %}{% url 'store' %}{% else %}{% url 'store' %}{% endif %}"><img src="{% static 'images/OficialLogoALM.png' %}" style="width: 70px; height: 45px; border-radius: 5px;" alt=""></a>
     
       <div class="d-flex align-items-center">
         <div class="dropdown {% if not request.user.is_authenticated %}disabled{% endif %}">
           <button class="btn btn-danger" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse"
             aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"
-            style="background-color: #CB4C4C; color: white;"
+            style="background-color: #e9820d; color: white;"
             onmouseover="this.style.backgroundColor='#A03A3A';"
             onmouseout="this.style.backgroundColor='#CB4C4C';">
             <i class="bi bi-search"></i>
           </button>
           <button class="btn btn-danger me-2 rounded-pill dropdown-toggle" type="button" id="dropdownMenuButton"
-            data-bs-toggle="dropdown" aria-expanded="false" style="background-color: #CB4C4C; color: white;"
+            data-bs-toggle="dropdown" aria-expanded="false" style="background-color: #e9820d; color: white;"
             onmouseover="this.style.backgroundColor='#A03A3A';"
             onmouseout="this.style.backgroundColor='#CB4C4C';">
             <i class="bi bi-person-circle"></i>
@@ -56,14 +56,14 @@
               {% if request.user.is_superuser %}
                 <li><a class="dropdown-item" href="{% url 'admin_order_list' %}"><i class="bi bi-clipboard-check-fill"></i> Lista de pedidos</a></li>
                 <li><a class="dropdown-item" href="{% url 'productHistory' %}"><i class="bi bi-box2-heart-fill"></i> Tus productos</a></li>
-                <li><a class="dropdown-item" href="{% url 'admin_personalizaciones' %}"><i class="bi bi-file-earmark-person-fill"></i> Pedidos personalizados</a></li>
+               
               {% endif %}
     
               {% if not request.user.is_superuser %}
                 <li><a class="dropdown-item" href="{% url 'order_history' %}"><i class="bi bi-bag-heart-fill"></i> Tus pedidos</a></li>
               {% endif %}
               
-              <li><a class="dropdown-item" href="{% url 'personalizacion' %}"><i class="bi bi-sticky-fill"></i> Pedir esticker personalizado</a></li>
+             
               <li><hr class="dropdown-divider"></li>
               <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="bi bi-box-arrow-in-left"></i> Cerrar sesión</a></li>
             {% else %}
@@ -76,7 +76,7 @@
         <!-- Botón del carrito -->
         <a type="button" href="{% if request.user.is_authenticated and not request.user.is_staff %}{% url 'cart' %}{% else %}#{% endif %}"
           class="btn btn-danger position-relative {% if not request.user.is_authenticated or request.user.is_staff %}disabled{% endif %}"
-          style="background-color: #CB4C4C; color: white;"
+          style="background-color: #e9820d; color: white;"
           onmouseover="this.style.backgroundColor='#A03A3A';"
           onmouseout="this.style.backgroundColor='#CB4C4C';">
           <i class="bi bi-cart"></i>
@@ -142,11 +142,10 @@
           <div class="col-md-3 col-lg-4 col-xl-3 mx-auto mb-4">
             <!-- Content -->
             <h6 class="text-uppercase fw-bold mb-4">
-              <i class="fas fa-gem me-3"></i>Stikckimy
+              <i class="fas fa-gem me-3"></i>Nuestra Misión
             </h6>
             <p>
-              ¿Tienes una idea única? ¡La convertimos en sticker!
-              ¿Buscas algo que llame la atención y se venda solo? ¡Ya lo creamos!
+              En Refaccionaria ALM buscamos proveer a nuestros clientes con refacciones de tracto partes de equipo pesado de alta calidad,ofreciendo productos confiables y soluciones rápidas para el mantenimiento y reparación de camiones, con un servicio al cliente excepcional y atención personalizada. Nos comprometemos con la satisfacción de nuestros clientes, garantizando la disponibilidad de las piezas y la entrega inmediata.
             </p>
           </div>
           <!-- Grid column -->
@@ -158,13 +157,13 @@
               Productos
             </h6>
             <p>
-              <a href="#!" class="text-reset">Animales</a>
+              <a href="#!" class="text-reset">Secador de aire</a>
             </p>
             <p>
-              <a href="#!" class="text-reset">Frases motivadoras</a>
+              <a href="#!" class="text-reset">Abrazaderas</a>
             </p>
             <p>
-              <a href="#!" class="text-reset">Arte digital</a>
+              <a href="#!" class="text-reset">Válvulas</a>
             </p>
             <p>
               <a href="#!" class="text-reset">Otros</a>
@@ -197,12 +196,12 @@
           <div class="col-md-4 col-lg-3 col-xl-3 mx-auto mb-md-0 mb-4">
             <!-- Links -->
             <h6 class="text-uppercase fw-bold mb-4">Contacto</h6>
-            <p><i class="fas fa-home me-3"></i> Campeche, Smaulá, #109 12992, México</p>
+            <p><i class="fas fa-home me-3"></i> Fracc. Bello Horizonte, Mza G, Lote 16 entre Niza y Capri. C.P. 24070, Campeche Campeche</p>
             <p>
               <i class="fas fa-envelope me-3"></i>
-              Stikckimy@gmail.com
+              ventascampeche@refaccionariaalmeyda.com.mx
             </p>
-            <p><i class="fas fa-phone me-3"></i> + 52 981 23 11228</p>
+            <p><i class="fas fa-phone me-3"></i> + 981 160 22 76</p>
             <p><i class="fas fa-print me-3"></i> + 52 981 123 8822</p>
           </div>
           <!-- Grid column -->
@@ -213,9 +212,9 @@
     <!-- Section: Links  -->
 
     <!-- Copyright -->
-    <div class="text-center text-white p-4" style="background-color: #CB4C4C;">
+    <div class="text-center text-white p-4" style="background-color: #e9820d;">
       © 2025 Copyright:
-      <a class="text-white fw-bold" href="#">Stikckimy.com</a>
+      <a class="text-white fw-bold" href="#">Refaccionariaalmeyda.com</a>
     </div>
     <!-- Copyright -->
   </footer>

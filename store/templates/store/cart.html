@@ -23,7 +23,7 @@
                     </button>
                 {% else %}
                     <a class="btn btn-danger rounded-pill" href="{% url 'checkout' %}" 
-                        style="background-color: #CB4C4C; color: white;"
+                        style="background-color: #e9820d; color: white;"
                         onmouseover="this.style.backgroundColor='#A03A3A';"
                         onmouseout="this.style.backgroundColor='#CB4C4C';">
                         Continuar
@@ -78,9 +78,17 @@
 
                                             <div class="quantity mt-1">
                                                 {% if item.quantity < item.product.quantity and item.product.quantity > 0 %}
-                                                    <img data-product="{{ item.product.id }}" data-action="add" class="chg-quantity update-cart" src="{% static 'images/arrow-up.png' %}" style="width: 10px;">
+                                                    <button type="button" data-product="{{ item.product.id }}" data-action="add" 
+                                                            class="btn btn-sm btn-outline-success chg-quantity update-cart me-1" 
+                                                            title="Agregar uno más">
+                                                        <i class="bi bi-plus-circle"></i>
+                                                    </button>
                                                 {% endif %}
-                                                <img data-product="{{ item.product.id }}" data-action="remove" class="chg-quantity update-cart" src="{% static 'images/arrow-down.png' %}" style="width: 10px;">
+                                                <button type="button" data-product="{{ item.product.id }}" data-action="remove" 
+                                                        class="btn btn-sm btn-outline-danger chg-quantity update-cart" 
+                                                        title="Quitar uno">
+                                                    <i class="bi bi-dash-circle"></i>
+                                                </button>
                                             </div>
                                         </td>
                                         <td>
@@ -120,6 +128,49 @@
     @media (min-width: 768px) {
         .table-container {
             overflow-x: initial;
+        }
+    }
+
+    /* Estilos para los botones de cantidad */
+    .chg-quantity {
+        border-radius: 50% !important;
+        width: 35px;
+        height: 35px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        border-width: 2px;
+    }
+
+    .chg-quantity:hover {
+        transform: scale(1.1);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .chg-quantity i {
+        font-size: 16px;
+    }
+
+    /* Animación al hacer clic */
+    .chg-quantity:active {
+        transform: scale(0.95);
+    }
+
+    /* Espacio entre botones */
+    .quantity .chg-quantity {
+        margin: 0 2px;
+    }
+
+    /* Responsive para móviles */
+    @media (max-width: 576px) {
+        .chg-quantity {
+            width: 30px;
+            height: 30px;
+        }
+        
+        .chg-quantity i {
+            font-size: 14px;
         }
     }
 </style>

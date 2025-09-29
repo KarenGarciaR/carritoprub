@@ -5,65 +5,188 @@
 <div class="row">
 	<div class="col-lg-6">
 		<div class="box-element" id="form-wrapper">
-            <h6>Escribe tu información de envío <a href="#" class="badge badge-success">Envío gratuito <i class="bi bi-truck-front"></i></a></h6>
+            <div class="card-header bg-primary text-white mb-4 rounded">
+                <h5 class="mb-0"><i class="bi bi-truck"></i> Información de Envío</h5>
+                <small><i class="bi bi-gift"></i> Envío gratuito en toda la república</small>
+            </div>
+            
             {% csrf_token %}
             <form id="form">
+                <!-- Información Personal -->
                 <div id="user-info">
-                    <div class="form-field">
-                        <input required class="form-control" type="text" name="name" placeholder="Nombre.."
-                               value="{% if customer %}{{ customer.name }}{% endif %}">
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h6 class="text-primary mb-3">
+                                <i class="bi bi-person-circle"></i> Datos del Cliente
+                            </h6>
+                        </div>
                     </div>
-                    <div class="form-field">
-                        <input required class="form-control" type="email" name="email" placeholder="Correo electrónico.."
-                               value="{% if customer %}{{ customer.email }}{% endif %}">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label fw-bold">
+                                <i class="bi bi-person"></i> Nombre Completo *
+                            </label>
+                            <input required class="form-control" type="text" id="name" name="name" 
+                                   placeholder="Ej: Juan Pérez García"
+                                   value="{% if customer %}{{ customer.name }}{% endif %}">
+                            <div class="form-text">Nombre como aparece en tu identificación</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label fw-bold">
+                                <i class="bi bi-envelope"></i> Correo Electrónico *
+                            </label>
+                            <input required class="form-control" type="email" id="email" name="email" 
+                                   placeholder="correo@ejemplo.com"
+                                   value="{% if customer %}{{ customer.email }}{% endif %}">
+                            <div class="form-text">Para notificaciones del pedido</div>
+                        </div>
                     </div>
                 </div>
                 
+                <!-- Información de Envío -->
                 <div id="shipping-info">
-                    <hr>
-                    <p>Información de envío:</p>
-                    <hr>
-                    <div class="form-field">
-                        <input class="form-control" type="text" name="cellphone" placeholder="Número de teléfono.."
-                               value="{% if customer %}{{ customer.phone_number }}{% endif %}">
+                    <hr class="my-4">
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h6 class="text-primary mb-3">
+                                <i class="bi bi-geo-alt"></i> Dirección de Entrega
+                            </h6>
+                        </div>
                     </div>
-                    <div class="form-field">
-                        <input class="form-control" type="text" name="address" placeholder="Dirección.."
-                               value="{% if customer %}{{ customer.address }}{% endif %}">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="cellphone" class="form-label fw-bold">
+                                <i class="bi bi-telephone"></i> Teléfono de Contacto *
+                            </label>
+                            <input required class="form-control" type="tel" id="cellphone" name="cellphone" 
+                                   placeholder="Ej: 981 123 4567"
+                                   value="{% if customer %}{{ customer.phone_number }}{% endif %}">
+                            <div class="form-text">Para coordinar la entrega</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="zipcode" class="form-label fw-bold">
+                                <i class="bi bi-mailbox"></i> Código Postal *
+                            </label>
+                            <input required class="form-control" type="text" id="zipcode" name="zipcode" 
+                                   placeholder="Ej: 24000"
+                                   pattern="[0-9]{5}"
+                                   maxlength="5"
+                                   value="{% if customer %}{{ customer.zip_code }}{% endif %}">
+                            <div class="form-text">5 dígitos numéricos</div>
+                        </div>
                     </div>
-                    <div class="form-field">
-                        <input class="form-control" type="text" name="city" placeholder="Ciudad.."
-                               value="{% if customer %}{{ customer.municipality }}{% endif %}">
+                    
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label for="address" class="form-label fw-bold">
+                                <i class="bi bi-house-door"></i> Dirección Completa *
+                            </label>
+                            <input required class="form-control" type="text" id="address" name="address" 
+                                   placeholder="Ej: Calle 5 de Mayo #123, Colonia Centro"
+                                   value="{% if customer %}{{ customer.address }}{% endif %}">
+                            <div class="form-text">Calle, número, colonia o fraccionamiento</div>
+                        </div>
                     </div>
-                    <div class="form-field">
-                        <input class="form-control" type="text" name="state" placeholder="Municipio.."
-                               value="{% if customer %}{{ customer.state }}{% endif %}">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="city" class="form-label fw-bold">
+                                <i class="bi bi-building"></i> Ciudad *
+                            </label>
+                            <input required class="form-control" type="text" id="city" name="city" 
+                                   placeholder="Ej: Campeche"
+                                   value="{% if customer %}{{ customer.municipality }}{% endif %}">
+                            <div class="form-text">Ciudad donde vives</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="state" class="form-label fw-bold">
+                                <i class="bi bi-map"></i> Estado/Municipio *
+                            </label>
+                            <input required class="form-control" type="text" id="state" name="state" 
+                                   placeholder="Ej: Campeche"
+                                   value="{% if customer %}{{ customer.state }}{% endif %}">
+                            <div class="form-text">Estado o municipio</div>
+                        </div>
                     </div>
-                    <div class="form-field">
-                        <input class="form-control" type="text" name="zipcode" placeholder="Código postal.."
-                               value="{% if customer %}{{ customer.zip_code }}{% endif %}">
+                    
+                    <!-- Referencias adicionales -->
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label for="referencias" class="form-label fw-bold">
+                                <i class="bi bi-signpost"></i> Referencias de Ubicación (Opcional)
+                            </label>
+                            <textarea class="form-control" id="referencias" name="referencias" rows="2"
+                                      placeholder="Ej: Entre las calles Hidalgo y Morelos, casa de color azul, portón café"></textarea>
+                            <div class="form-text">Ayúdanos a encontrar tu dirección más fácilmente</div>
+                        </div>
                     </div>
                 </div>
-                <hr>
-            
-                <button id="form-button" class="btn btn-danger text-white btn-block rounded-pill" type="submit"
-                        style="background-color: #CB4C4C; color: white;"
-                        onmouseover="this.style.backgroundColor='#A03A3A';"
-                        onmouseout="this.style.backgroundColor='#CB4C4C';">Continuar</button>
+                
+                <hr class="my-4">
+                
+                <!-- Botón de continuar -->
+                <div class="d-grid">
+                    <button id="form-button" class="btn btn-danger btn-lg rounded-pill" type="submit"
+                            style="background-color: #e9820d; color: white;"
+                            onmouseover="this.style.backgroundColor='#A03A3A';"
+                            onmouseout="this.style.backgroundColor='#CB4C4C';">
+                        <i class="bi bi-arrow-right-circle"></i> Continuar al Pago
+                    </button>
+                </div>
             </form>
 		</div>
         <br>
         <div class="box-element hidden" id="payment-info">
-            <div class="mb-3">
-                <small class="d-block mb-2">Pago directo</small>
-                <button id="make-payment" class="btn btn-primary text-white rounded-pill">
-                    Finalizar pago <i class="bi bi-cash-coin"></i>
-                </button>
+            <div class="card-header bg-success text-white mb-4 rounded">
+                <h5 class="mb-0"><i class="bi bi-credit-card"></i> Método de Pago</h5>
+                <small>Selecciona cómo prefieres pagar tu pedido</small>
+            </div>
+            
+            <!-- Pago directo -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-cash-coin text-success me-2 fs-4"></i>
+                        <div>
+                            <h6 class="mb-0">Pago Directo</h6>
+                            <small class="text-muted">Transferencia bancaria o efectivo</small>
+                        </div>
+                    </div>
+                    <p class="text-muted small mb-3">
+                        Puedes pagar mediante transferencia bancaria o efectivo contra entrega. 
+                        Te enviaremos los datos bancarios por correo.
+                    </p>
+                    <button id="make-payment" class="btn btn-success w-100 rounded-pill">
+                        <i class="bi bi-check-circle"></i> Finalizar Pedido - Pago Directo
+                    </button>
+                </div>
             </div>
         
-            <div>
-                <small class="d-block mb-2">Pago con PayPal</small>
-                <div id="paypal-button" class="mt-2"></div>
+            <!-- Separador -->
+            <div class="text-center my-3">
+                <span class="badge bg-secondary">O</span>
+            </div>
+            
+            <!-- PayPal -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-paypal text-primary me-2 fs-4"></i>
+                        <div>
+                            <h6 class="mb-0">PayPal</h6>
+                            <small class="text-muted">Pago seguro con PayPal</small>
+                        </div>
+                    </div>
+                    <p class="text-muted small mb-3">
+                        Paga de forma segura con tu cuenta PayPal o tarjeta de crédito/débito.
+                    </p>
+                    <div id="paypal-button" class="mt-2"></div>
+                </div>
             </div>
         </div>        
 	</div>
@@ -155,12 +278,44 @@
                 'address': form.address.value,
                 'city': form.city.value,
                 'state': form.state.value,
-                'zipcode': form.zipcode.value
+                'zipcode': form.zipcode.value,
+                'referencias': form.referencias ? form.referencias.value : ''
             };
 
             if (shipping !== 'False') {
-                if (!form.address.value || !form.city.value || !form.state.value || !form.zipcode.value) {
-                    alert("Por favor completa todos los campos de envío.");
+                // Validaciones más específicas
+                if (!form.name.value.trim()) {
+                    alert("❌ Por favor ingresa tu nombre completo.");
+                    return;
+                }
+                if (!form.email.value.trim()) {
+                    alert("❌ Por favor ingresa tu correo electrónico.");
+                    return;
+                }
+                if (!form.cellphone.value.trim()) {
+                    alert("📞 Por favor ingresa tu número de teléfono para coordinar la entrega.");
+                    return;
+                }
+                if (!form.address.value.trim()) {
+                    alert("🏠 Por favor ingresa tu dirección completa (calle, número, colonia).");
+                    return;
+                }
+                if (!form.city.value.trim()) {
+                    alert("🏙️ Por favor ingresa tu ciudad.");
+                    return;
+                }
+                if (!form.state.value.trim()) {
+                    alert("🗺️ Por favor ingresa tu estado o municipio.");
+                    return;
+                }
+                if (!form.zipcode.value.trim()) {
+                    alert("📮 Por favor ingresa tu código postal.");
+                    return;
+                }
+                
+                // Validación del código postal (5 dígitos)
+                if (!/^\d{5}$/.test(form.zipcode.value.trim())) {
+                    alert("📮 El código postal debe tener exactamente 5 dígitos numéricos.");
                     return;
                 }
             }
@@ -210,3 +365,70 @@
 </script>
 
 {% endblock content %}
+
+<style>
+    /* Estilos para mejorar el formulario de checkout */
+    .form-label {
+        color: #2c3e50;
+        font-weight: 600;
+    }
+    
+    .form-control:focus {
+        border-color: #e9820d;
+        box-shadow: 0 0 0 0.2rem rgba(233, 130, 13, 0.25);
+    }
+    
+    .form-text {
+        color: #6c757d;
+        font-size: 0.875em;
+    }
+    
+    .card-header {
+        border: none !important;
+    }
+    
+    .box-element {
+        padding: 1.5rem;
+        border: 1px solid #dee2e6;
+        border-radius: 0.5rem;
+        background-color: #fff;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    /* Iconos en labels */
+    .form-label i {
+        color: #e9820d;
+        margin-right: 0.25rem;
+    }
+    
+    /* Estilos para sección de pago */
+    #payment-info .card {
+        border: 1px solid #dee2e6;
+        transition: all 0.3s ease;
+    }
+    
+    #payment-info .card:hover {
+        border-color: #e9820d;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    
+    /* Validación visual */
+    .form-control:invalid {
+        border-color: #dc3545;
+    }
+    
+    .form-control:valid {
+        border-color: #28a745;
+    }
+    
+    /* Responsive improvements */
+    @media (max-width: 768px) {
+        .box-element {
+            padding: 1rem;
+        }
+        
+        .card-header h5 {
+            font-size: 1.1rem;
+        }
+    }
+</style>

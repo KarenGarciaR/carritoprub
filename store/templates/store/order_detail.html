@@ -2,16 +2,254 @@
 {% load static %}
 {% block content %}
 <div class="container py-4">
-  <h4>Detalle del Pedido #{{ order.id }}</h4>
-  <p><strong>Estado:</strong> {{ order.status }}</p>
-  <p><strong>Fecha:</strong> {{ order.date_ordered }}</p>
-  <p><strong>Entrega estimada:</strong> {{ order.estimated_delivery }}</p>
-  <hr>
-  <h5>Productos:</h5>
-  <ul>
-    {% for item in order.orderitem_set.all %}
-      <li>{{ item.product.name }} - {{ item.quantity }} x ${{ item.product.price }}</li>
-    {% endfor %}
-  </ul>
+  <div class="row">
+    <!-- Información Principal del Pedido -->
+    <div class="col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0">📋 Detalle del Pedido #{{ order.id }}</h4>
+        </div>
+        <div class="card-body">
+          <!-- Estado del pedido con badge -->
+          <div class="row mb-3">
+            <div class="col-sm-4"><strong>Estado:</strong></div>
+            <div class="col-sm-8">
+              {% if order.status|lower == "pendiente" %}
+                <span class="badge bg-warning text-dark fs-6">⏳ Pendiente</span>
+                <small class="text-muted d-block">Falta completar pago</small>
+              {% elif order.status|lower == "procesando" %}
+                <span class="badge bg-info text-white fs-6">🔄 Procesando</span>
+                <small class="text-success d-block">✓ Pago confirmado</small>
+              {% elif order.status|lower == "enviado" %}
+                <span class="badge bg-info text-dark fs-6">📦 Enviado</span>
+              {% elif order.status|lower == "entregado" %}
+                <span class="badge bg-success fs-6">✅ Entregado</span>
+              {% elif order.status|lower == "cancelado" %}
+                <span class="badge bg-danger text-white fs-6">❌ Cancelado</span>
+              {% elif order.status|lower == "reembolso_pendiente" %}
+                <span class="badge bg-warning text-dark fs-6">💰 Reembolso Pendiente</span>
+              {% elif order.status|lower == "reembolsado" %}
+                <span class="badge bg-success fs-6">💚 Reembolsado</span>
+              {% else %}
+                <span class="badge bg-secondary fs-6">{{ order.status }}</span>
+              {% endif %}
+            </div>
+          </div>
+          
+          <!-- Información de fechas -->
+          <div class="row mb-3">
+            <div class="col-sm-4"><strong>Fecha del Pedido:</strong></div>
+            <div class="col-sm-8">{{ order.date_ordered|date:"d/m/Y H:i" }}</div>
+          </div>
+          
+          {% if order.estimated_delivery %}
+          <div class="row mb-3">
+            <div class="col-sm-4"><strong>Entrega estimada:</strong></div>
+            <div class="col-sm-8">{{ order.estimated_delivery|date:"d/m/Y" }}</div>
+          </div>
+          {% endif %}
+
+          <!-- Método de pago -->
+          {% if order.payment_method %}
+          <div class="row mb-3">
+            <div class="col-sm-4"><strong>Método de Pago:</strong></div>
+            <div class="col-sm-8">
+              <span class="badge bg-secondary">{{ order.get_payment_method_display }}</span>
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- Información del cliente -->
+          {% if order.customer %}
+          <div class="row mb-3">
+            <div class="col-sm-4"><strong>Cliente:</strong></div>
+            <div class="col-sm-8">{{ order.customer.name }} ({{ order.customer.email }})</div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Lista de productos -->
+      <div class="card shadow-sm mt-4">
+        <div class="card-header bg-secondary text-white">
+          <h5 class="mb-0">🛍️ Productos del Pedido</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Producto</th>
+                  <th>Precio Unitario</th>
+                  <th>Cantidad</th>
+                  <th>Subtotal</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in order.orderitem_set.all %}
+                <tr>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      {% if item.product.image %}
+                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" 
+                             class="rounded me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                      {% endif %}
+                      <div>
+                        <strong>{{ item.product.name }}</strong>
+                        {% if item.product.description %}
+                          <br><small class="text-muted">{{ item.product.description|truncatechars:50 }}</small>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </td>
+                  <td>${{ item.product.price|floatformat:2 }}</td>
+                  <td>{{ item.quantity }}</td>
+                  <td><strong>${{ item.get_total|floatformat:2 }}</strong></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+              <tfoot class="table-dark">
+                <tr>
+                  <th colspan="3">Total del Pedido:</th>
+                  <th class="fs-5">${{ order.get_cart_total|floatformat:2 }}</th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel de Acciones -->
+    <div class="col-lg-4">
+      <!-- Acciones disponibles -->
+      <div class="card shadow-sm">
+        <div class="card-header bg-warning text-dark">
+          <h5 class="mb-0">⚙️ Acciones Disponibles</h5>
+        </div>
+        <div class="card-body">
+          
+          <!-- Botón de regresar -->
+          <a href="{% url 'order_history' %}" class="btn btn-outline-secondary w-100 mb-3">
+            <i class="bi bi-arrow-left"></i> Volver al Historial
+          </a>
+
+          <!-- Formulario de cancelación (solo si puede cancelarse) -->
+          {% if order.status|lower == "pendiente" or order.status|lower == "procesando" or order.status|lower == "enviado" %}
+            <div class="alert alert-info p-3 mb-3">
+              <i class="bi bi-info-circle"></i> 
+              <strong>Cancelar Pedido</strong><br>
+              <small>Puedes cancelar este pedido y solicitar reembolso si aplica.</small>
+            </div>
+            
+            <form action="{% url 'cancel_order' order.id %}" method="post">
+              {% csrf_token %}
+              
+              <div class="mb-3">
+                <label for="cancel_reason" class="form-label">
+                  <strong>Motivo de cancelación:</strong>
+                </label>
+                <select class="form-select" name="cancel_reason" id="cancel_reason" required>
+                  <option value="">Selecciona un motivo...</option>
+                  <option value="Cliente cambió de opinión">Cambié de opinión</option>
+                  <option value="Encontré mejor precio">Encontré mejor precio</option>
+                  <option value="Ya no necesito el producto">Ya no necesito el producto</option>
+                  <option value="Tiempo de entrega muy largo">Tiempo de entrega muy largo</option>
+                  <option value="Error en el pedido">Error en el pedido</option>
+                  <option value="Producto defectuoso">Producto defectuoso</option>
+                  <option value="No llegó a tiempo">No llegó a tiempo</option>
+                  <option value="Otro">Otro motivo</option>
+                </select>
+              </div>
+              
+              <!-- Información adicional sobre reembolsos -->
+              {% if order.status|lower == "procesando" or order.status|lower == "enviado" %}
+                <div class="alert alert-warning p-2 mb-3">
+                  <small>
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Política de Reembolso:</strong><br>
+                    • Se solicitará reembolso automáticamente<br>
+                    • Deberás devolver los artículos<br>
+                    • Proceso de evaluación: 3-5 días hábiles<br>
+                    • Reembolso: 7-14 días tras aprobación
+                  </small>
+                </div>
+              {% endif %}
+              
+              <button type="submit" class="btn btn-danger w-100"
+                      onclick="return confirm('¿Estás seguro que deseas cancelar este pedido? Esta acción no se puede deshacer.');">
+                <i class="bi bi-x-circle"></i> 
+                {% if order.status|lower == "pendiente" %}
+                  Cancelar Pedido
+                {% else %}
+                  Cancelar y Solicitar Reembolso
+                {% endif %}
+              </button>
+            </form>
+            
+          {% elif order.status|lower == "cancelado" %}
+            <div class="alert alert-secondary">
+              <i class="bi bi-x-circle"></i> 
+              <strong>Pedido Cancelado</strong><br>
+              <small>Este pedido ya ha sido cancelado.</small>
+              {% if order.refund_reason %}
+                <br><small><strong>Motivo:</strong> {{ order.refund_reason }}</small>
+              {% endif %}
+            </div>
+            
+          {% elif order.status|lower == "reembolso_pendiente" %}
+            <div class="alert alert-warning">
+              <i class="bi bi-clock-history"></i> 
+              <strong>Reembolso en Proceso</strong><br>
+              <small>Tu solicitud de reembolso está siendo evaluada.</small>
+              {% if order.refund_requested_date %}
+                <br><small><strong>Solicitado:</strong> {{ order.refund_requested_date|date:"d/m/Y H:i" }}</small>
+              {% endif %}
+            </div>
+            
+          {% elif order.status|lower == "reembolsado" %}
+            <div class="alert alert-success">
+              <i class="bi bi-check-circle"></i> 
+              <strong>Reembolso Procesado</strong><br>
+              <small>El reembolso ha sido procesado exitosamente.</small>
+              {% if order.refund_processed_date %}
+                <br><small><strong>Procesado:</strong> {{ order.refund_processed_date|date:"d/m/Y H:i" }}</small>
+              {% endif %}
+            </div>
+            
+          {% elif order.status|lower == "entregado" %}
+            <div class="alert alert-success">
+              <i class="bi bi-check-circle"></i> 
+              <strong>Pedido Entregado</strong><br>
+              <small>Tu pedido ha sido entregado exitosamente.</small>
+            </div>
+            
+          {% else %}
+            <div class="alert alert-info">
+              <i class="bi bi-info-circle"></i> 
+              <strong>Sin acciones disponibles</strong><br>
+              <small>No hay acciones disponibles para este pedido en este momento.</small>
+            </div>
+          {% endif %}
+          
+        </div>
+      </div>
+
+      <!-- Panel de información adicional -->
+      <div class="card shadow-sm mt-3">
+        <div class="card-header bg-light">
+          <h6 class="mb-0">📞 ¿Necesitas Ayuda?</h6>
+        </div>
+        <div class="card-body">
+          <small>
+            Si tienes alguna pregunta sobre tu pedido, puedes contactarnos:<br>
+            • Email: soporte@tuempresa.com<br>
+            • Teléfono: +1 234 567 8900<br>
+            • Horario: Lun-Vie 9:00-18:00
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}

@@ -30,6 +30,7 @@ urlpatterns = [
     path('comment/<int:pk>/like/', views.like_comment, name='like_comment'),
     path('gestion/orders/', views.admin_order_list, name='admin_order_list'),
     path('gestion/orders/<int:order_id>/update/', views.update_order_status, name='update_order_status'),
+    path("orders/<int:order_id>/cancel/", views.cancel_order, name="cancel_order"),
 ]
 
 if settings.DEBUG:
