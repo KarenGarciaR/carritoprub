@@ -283,39 +283,79 @@
             };
 
             if (shipping !== 'False') {
-                // Validaciones más específicas
+                // Validaciones más específicas con SweetAlert2
                 if (!form.name.value.trim()) {
-                    alert("❌ Por favor ingresa tu nombre completo.");
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Nombre requerido',
+                        text: 'Por favor ingresa tu nombre completo',
+                        confirmButtonColor: '#e9820d'
+                    });
                     return;
                 }
                 if (!form.email.value.trim()) {
-                    alert("❌ Por favor ingresa tu correo electrónico.");
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Correo requerido',
+                        text: 'Por favor ingresa tu correo electrónico',
+                        confirmButtonColor: '#e9820d'
+                    });
                     return;
                 }
                 if (!form.cellphone.value.trim()) {
-                    alert("📞 Por favor ingresa tu número de teléfono para coordinar la entrega.");
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Teléfono requerido',
+                        text: 'Por favor ingresa tu número de teléfono para coordinar la entrega',
+                        confirmButtonColor: '#e9820d'
+                    });
                     return;
                 }
                 if (!form.address.value.trim()) {
-                    alert("🏠 Por favor ingresa tu dirección completa (calle, número, colonia).");
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Dirección requerida',
+                        text: 'Por favor ingresa tu dirección completa (calle, número, colonia)',
+                        confirmButtonColor: '#e9820d'
+                    });
                     return;
                 }
                 if (!form.city.value.trim()) {
-                    alert("🏙️ Por favor ingresa tu ciudad.");
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Ciudad requerida',
+                        text: 'Por favor ingresa tu ciudad',
+                        confirmButtonColor: '#e9820d'
+                    });
                     return;
                 }
                 if (!form.state.value.trim()) {
-                    alert("🗺️ Por favor ingresa tu estado o municipio.");
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Estado requerido',
+                        text: 'Por favor ingresa tu estado o municipio',
+                        confirmButtonColor: '#e9820d'
+                    });
                     return;
                 }
                 if (!form.zipcode.value.trim()) {
-                    alert("📮 Por favor ingresa tu código postal.");
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Código postal requerido',
+                        text: 'Por favor ingresa tu código postal',
+                        confirmButtonColor: '#e9820d'
+                    });
                     return;
                 }
                 
                 // Validación del código postal (5 dígitos)
                 if (!/^\d{5}$/.test(form.zipcode.value.trim())) {
-                    alert("📮 El código postal debe tener exactamente 5 dígitos numéricos.");
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Código postal inválido',
+                        text: 'El código postal debe tener exactamente 5 dígitos numéricos',
+                        confirmButtonColor: '#e9820d'
+                    });
                     return;
                 }
             }
@@ -335,15 +375,51 @@
             .then((response) => response.json())
             .then((data) => {
                 console.log('Orden procesada exitosamente:', data);
-                alert('¡Transacción completada!');
-
-                var cart = {};
-                document.cookie = 'cart=' + JSON.stringify(cart) + ';domain=;path=/';
-                window.location.href = orderHistoryUrl;
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Transacción Completada!',
+                    html: `
+                        <div style="text-align: center;">
+                            <i class="bi bi-check-circle-fill" style="font-size: 3rem; color: #28a745;"></i>
+                            <h4 style="margin: 1rem 0; color: #2c3e50;">¡Pedido realizado con éxito!</h4>
+                            <p style="color: #6c757d;">Tu pedido ha sido procesado correctamente.</p>
+                            <p style="color: #6c757d;">Recibirás un correo de confirmación en breve.</p>
+                        </div>
+                    `,
+                    confirmButtonText: 'Ver mis pedidos',
+                    confirmButtonColor: '#e9820d',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    showConfirmButton: true,
+                    timer: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        var cart = {};
+                        document.cookie = 'cart=' + JSON.stringify(cart) + ';domain=;path=/';
+                        window.location.href = orderHistoryUrl;
+                    }
+                });
             })
             .catch((error) => {
                 console.error('Error al procesar la orden:', error);
-                alert("Hubo un problema al procesar la orden.");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error en el procesamiento',
+                    html: `
+                        <div style="text-align: center;">
+                            <i class="bi bi-exclamation-triangle-fill" style="font-size: 3rem; color: #dc3545;"></i>
+                            <h4 style="margin: 1rem 0; color: #2c3e50;">Hubo un problema</h4>
+                            <p style="color: #6c757d;">No se pudo procesar tu pedido en este momento.</p>
+                            <p style="color: #6c757d;">Por favor, inténtalo nuevamente o contacta soporte.</p>
+                        </div>
+                    `,
+                    confirmButtonText: 'Intentar nuevamente',
+                    confirmButtonColor: '#e9820d',
+                    showCancelButton: true,
+                    cancelButtonText: 'Contactar soporte',
+                    cancelButtonColor: '#6c757d'
+                });
             });
         }
 

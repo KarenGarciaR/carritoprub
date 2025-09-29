@@ -57,7 +57,7 @@
                 <td>{{ product.quantity }}</td>
                 <td>
                   <a href="{% url 'edit_product' product.id %}" class="btn btn-sm btn-warning">Editar</a>
-                  <a href="{% url 'delete_product' product.id %}" class="btn btn-sm btn-danger" onclick="return confirm('¿Estás seguro de que quieres eliminar este producto?');">Eliminar</a>
+                  <a href="{% url 'delete_product' product.id %}" class="btn btn-sm btn-danger" onclick="return showDeleteProductConfirmation(event, '{{ product.name }}');">Eliminar</a>
                 </td>
               </tr>
               {% endfor %}
@@ -114,6 +114,46 @@
       });
     });
   });
+
+  // Función para confirmar eliminación de producto
+  function showDeleteProductConfirmation(event, productName) {
+    event.preventDefault();
+    
+    Swal.fire({
+      title: '¿Eliminar producto?',
+      html: `
+        <div style="text-align: center;">
+          <i class="bi bi-trash-fill" style="font-size: 3rem; color: #dc3545;"></i>
+          <h4 style="margin: 1rem 0; color: #2c3e50;">Eliminar producto</h4>
+          <p style="color: #6c757d;">¿Estás seguro que deseas eliminar el producto:</p>
+          <p style="color: #e9820d; font-weight: bold;">"${productName}"</p>
+          <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 0.5rem; padding: 1rem; margin: 1rem 0;">
+            <small style="color: #721c24;">
+              <strong>⚠️ Advertencia:</strong><br>
+              Esta acción no se puede deshacer.<br>
+              El producto será eliminado permanentemente.
+            </small>
+          </div>
+        </div>
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      reverseButtons: true,
+      allowOutsideClick: false,
+      focusCancel: true
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Si confirma, redirigir a la URL de eliminación
+        window.location.href = event.target.href;
+      }
+    });
+    
+    return false;
+  }
 </script>
 
 {% endblock content %}

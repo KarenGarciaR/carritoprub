@@ -177,7 +177,7 @@
               {% endif %}
               
               <button type="submit" class="btn btn-danger w-100"
-                      onclick="return confirm('¿Estás seguro que deseas cancelar este pedido? Esta acción no se puede deshacer.');">
+                      onclick="return showCancelConfirmation();">
                 <i class="bi bi-x-circle"></i> 
                 {% if order.status|lower == "pendiente" %}
                   Cancelar Pedido
@@ -252,4 +252,69 @@
     </div>
   </div>
 </div>
+
+<script>
+function showCancelConfirmation() {
+    const orderStatus = "{{ order.status|lower }}";
+    let title, html;
+    
+    if (orderStatus === "pendiente") {
+        title = "¿Cancelar pedido?";
+        html = `
+            <div style="text-align: center;">
+                <i class="bi bi-exclamation-triangle" style="font-size: 3rem; color: #ffc107;"></i>
+                <h4 style="margin: 1rem 0; color: #2c3e50;">Cancelación de pedido</h4>
+                <p style="color: #6c757d;">¿Estás seguro que deseas cancelar este pedido?</p>
+                <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 0.5rem; padding: 1rem; margin: 1rem 0;">
+                    <small style="color: #856404;">
+                        <strong>⚠️ Ten en cuenta:</strong><br>
+                        • Esta acción no se puede deshacer<br>
+                        • El pedido será cancelado inmediatamente
+                    </small>
+                </div>
+            </div>
+        `;
+    } else {
+        title = "¿Solicitar reembolso?";
+        html = `
+            <div style="text-align: center;">
+                <i class="bi bi-cash-stack" style="font-size: 3rem; color: #dc3545;"></i>
+                <h4 style="margin: 1rem 0; color: #2c3e50;">Cancelación y reembolso</h4>
+                <p style="color: #6c757d;">¿Estás seguro que deseas cancelar este pedido y solicitar reembolso?</p>
+                <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 0.5rem; padding: 1rem; margin: 1rem 0;">
+                    <small style="color: #721c24;">
+                        <strong>📋 Política de reembolso:</strong><br>
+                        • Deberás devolver los artículos<br>
+                        • Proceso de evaluación: 3-5 días hábiles<br>
+                        • Reembolso: 7-14 días tras aprobación<br>
+                        • Esta acción no se puede deshacer
+                    </small>
+                </div>
+            </div>
+        `;
+    }
+    
+    Swal.fire({
+        title: title,
+        html: html,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: orderStatus === "pendiente" ? 'Sí, cancelar' : 'Sí, solicitar reembolso',
+        cancelButtonText: 'No, mantener pedido',
+        reverseButtons: true,
+        allowOutsideClick: false,
+        focusCancel: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Si confirma, enviar el formulario
+            document.querySelector('form[action*="cancel_order"]').submit();
+        }
+    });
+    
+    return false; // Prevenir el submit automático
+}
+</script>
+
 {% endblock %}
