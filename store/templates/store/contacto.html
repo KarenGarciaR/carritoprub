@@ -1,0 +1,307 @@
+{% extends 'store/base.html' %}
+{% load static %}
+
+{% block title %}Contacto - ALM Refaccionaria{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        padding: 6rem 2rem 4rem;
+        text-align: center;
+        color: white;
+    }
+
+    .page-header h1 {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+
+    .page-header p {
+        font-size: 1.2rem;
+        color: #b2bec3;
+    }
+
+    .contact-section {
+        padding: 5rem 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .contact-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 3rem;
+    }
+
+    /* Contact Info Cards */
+    .contact-cards {
+        display: grid;
+        gap: 2rem;
+    }
+
+    .contact-card {
+        background: white;
+        padding: 2.5rem;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        display: flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+
+    .contact-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(255, 140, 0, 0.2);
+    }
+
+    .contact-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1.5rem;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+
+    .contact-info h3 {
+        font-size: 1.2rem;
+        color: var(--text-dark);
+        margin-bottom: 0.5rem;
+    }
+
+    .contact-info p {
+        color: var(--text-light);
+        margin: 0;
+    }
+
+    .contact-info a {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    /* Contact Form */
+    .contact-form {
+        background: white;
+        padding: 2.5rem;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+
+    .contact-form h2 {
+        font-size: 2rem;
+        color: var(--text-dark);
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--text-dark);
+        font-weight: 500;
+    }
+
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 1rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+    }
+
+    .form-group textarea {
+        resize: vertical;
+        min-height: 120px;
+    }
+
+    .submit-btn {
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(255, 140, 0, 0.3);
+    }
+
+    /* Map Section */
+    .map-section {
+        background: var(--light-bg);
+        padding: 5rem 2rem;
+    }
+
+    .map-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        height: 400px;
+        background: #dfe6e9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-light);
+    }
+
+    .map-placeholder {
+        text-align: center;
+    }
+
+    .map-placeholder i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        color: var(--primary-color);
+    }
+
+    @media (max-width: 768px) {
+        .page-header h1 {
+            font-size: 2rem;
+        }
+
+        .contact-form {
+            margin-top: 2rem;
+        }
+
+        .contact-card {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .contact-icon {
+            margin-right: 0;
+            margin-bottom: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<section class="page-header">
+    <h1>Contáctanos</h1>
+    <p>Estamos aquí para ayudarte. Comunícate con nosotros</p>
+</section>
+
+<!-- Contact Section -->
+<section class="contact-section">
+    <div class="contact-grid">
+        <!-- Contact Information -->
+        <div class="contact-cards">
+            <div class="contact-card">
+                <div class="contact-icon">
+                    <i class="fas fa-phone"></i>
+                </div>
+                <div class="contact-info">
+                    <h3>Teléfono</h3>
+                    <p><a href="tel:+529811602276">+52 981 160 22 76</a></p>
+                    <p>Lunes a Viernes 8:00 AM - 6:00 PM</p>
+                </div>
+            </div>
+
+            <div class="contact-card">
+                <div class="contact-icon">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <div class="contact-info">
+                    <h3>Email</h3>
+                    <p><a href="mailto:ventascampeche@refaccionariaalmeyda.com.mx">ventascampeche@refaccionariaalmeyda.com.mx</a></p>
+                    <p>Respuesta en 24 horas</p>
+                </div>
+            </div>
+
+            <div class="contact-card">
+                <div class="contact-icon">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+                <div class="contact-info">
+                    <h3>Ubicación</h3>
+                    <p>Fracc. Bello Horizonte, Mza G, Lote 16</p>
+                    <p>Entre Niza y Capri. C.P. 24070</p>
+                    <p>Campeche, Campeche</p>
+                </div>
+            </div>
+
+            <div class="contact-card">
+                <div class="contact-icon">
+                    <i class="fab fa-whatsapp"></i>
+                </div>
+                <div class="contact-info">
+                    <h3>WhatsApp</h3>
+                    <p><a href="https://wa.me/529811602276" target="_blank">+52 981 160 22 76</a></p>
+                    <p>Chat directo</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Form -->
+        <div class="contact-form">
+            <h2>Envíanos un Mensaje</h2>
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="nombre">Nombre Completo</label>
+                    <input type="text" id="nombre" name="nombre" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Correo Electrónico</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="telefono">Teléfono</label>
+                    <input type="tel" id="telefono" name="telefono">
+                </div>
+
+                <div class="form-group">
+                    <label for="mensaje">Mensaje</label>
+                    <textarea id="mensaje" name="mensaje" required></textarea>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-paper-plane"></i> Enviar Mensaje
+                </button>
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- Map Section -->
+<section class="map-section">
+    <div class="map-container">
+        <div class="map-placeholder">
+            <i class="fas fa-map-marked-alt"></i>
+            <p>Mapa - Ubicación de ALM Refaccionaria</p>
+            <p style="font-size: 0.9rem;">(Aquí puedes integrar Google Maps)</p>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -39,6 +39,39 @@ def index(request):
     }
     return render(request, 'store/index.html', context)
 
+def nosotros(request):
+    """Página Nosotros/Acerca de"""
+    data = cartData(request)
+    cartItems = data['cartItems']
+    
+    context = {
+        'cartItems': cartItems
+    }
+    return render(request, 'store/nosotros.html', context)
+
+def contacto(request):
+    """Página de Contacto"""
+    data = cartData(request)
+    cartItems = data['cartItems']
+    
+    if request.method == 'POST':
+        # Procesar formulario de contacto
+        nombre = request.POST.get('nombre')
+        email = request.POST.get('email')
+        telefono = request.POST.get('telefono')
+        mensaje = request.POST.get('mensaje')
+        
+        # Aquí puedes agregar la lógica para enviar el mensaje
+        # Por ejemplo, guardar en base de datos o enviar email
+        
+        messages.success(request, 'Tu mensaje ha sido enviado correctamente. Nos pondremos en contacto contigo pronto.')
+        return redirect('contacto')
+    
+    context = {
+        'cartItems': cartItems
+    }
+    return render(request, 'store/contacto.html', context)
+
 # Peticiones personalizadas de los usuarios
 @staff_member_required
 def lista_personalizaciones(request):
