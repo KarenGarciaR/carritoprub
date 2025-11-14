@@ -1,196 +1,799 @@
-{% extends 'store/main.html' %}
+{% extends 'store/base.html' %}
 {% load static %}
-{% block content %}
 
-<div class="container my-5">
-  <div class="row g-5">
-    <!-- Imágenes -->
-    <div class="col-lg-6">
-      <div class="border rounded p-2 position-relative text-center">
-        <img id="main-image" src="{{ product.image.url }}"
-             class="img-fluid rounded mx-auto d-block"
-             style="width: 450px;"
-             alt="{{ product.name }}">
-      </div>
-      <div class="d-flex justify-content-center gap-2 mt-3">
-        {% for thumb in thumbnails %}
-          <img src="{{ thumb }}" class="img-thumbnail thumbnail-img"
-               style="width: 90px; height: 90px; object-fit: cover; cursor: pointer;"
-               alt="Miniatura">
-        {% endfor %}
-      </div>
-    </div>
+{% block title %}{{ product.name }} - ALM Refaccionaria{% endblock %}
 
-    <!-- Detalles -->
-    <div class="col-lg-6">
-      <h2 class="fw-bold">{{ product.name }}</h2>
-      <p class="text-muted mb-3">{{ product.description }}</p>
-
-      <!-- Precio -->
-      <div class="mb-3">
-        {% if product.offer %}
-          <span class="text-decoration-line-through text-muted fs-5">${{ product.price|floatformat:2 }}</span>
-          <span class="fs-3 text-danger ms-2">${{ product.offer_price|floatformat:2 }}</span>
-        {% else %}
-          <span class="fs-3 text-dark">${{ product.price|floatformat:2 }}</span>
-        {% endif %}
-      </div>
-
-      <!-- Valoración -->
-      <div class="mb-3">
-        <span class="text-warning fs-5">★★★★☆</span>
-        <span class="text-muted">4.0 / 5.0</span>
-      </div>
-
-      <!-- Lista de detalles -->
-      <ul class="list-group list-group-flush mb-3">
-        <li class="list-group-item"><strong>Fecha de entrega:</strong> {{ product.date_of_delivery|date:'Y-m-d' }}</li>
-        <li class="list-group-item"><strong>Categoría:</strong> {{ product.category }}</li>
-        <li class="list-group-item"><strong>Stock disponible:</strong> {{ product.quantity }}</li>
-        <li class="list-group-item"><strong>Dimensiones:</strong> {{ product.height_cm }}×{{ product.width_cm }} cm</li>
-        <li class="list-group-item"><strong>Material:</strong> {{ product.material }}</li>
-        <li class="list-group-item"><strong>Acabado:</strong> {{ product.finish }}</li>
-        <li class="list-group-item"><strong>Proveedor:</strong> <h6 style="color: #e9820d; font-weight: 800;"> {{ product.proveedor}}</h6></li>
-      </ul>
-
-      <!-- Botones de acción -->
-      <div class="d-flex gap-3 mb-4 align-items-center">
-        {% if product.quantity > 0 %}
-        {% if request.user.is_authenticated %}
-            {% if request.user.is_superuser or request.user.is_staff %}
-                <p class="text-muted">Eres administrador</p>
-            {% else %}
-                <button data-product="{{product.id}}" data-action="add"
-                        class="btn btn-danger rounded-pill px-4 update-cart"
-                        style="background-color: #e9820d; color: white;"
-                        onmouseover="this.style.backgroundColor='#A03A3A';"
-                        onmouseout="this.style.backgroundColor='#CB4C4C';">
-                    <i class="bi bi-cart-plus me-2"></i> Agregar al carrito
-                </button>
-            {% endif %}
-        {% else %}
-            <!-- Usuario no logueado: podrías redirigir o mostrar un mensaje -->
-            <p class="text-muted">Inicia sesión para agregar productos al carrito.</p>
-        {% endif %}
-        {% else %}
-            <button class="btn btn-secondary rounded-pill px-4" disabled>
-                <i class="bi bi-x-circle me-2"></i> Agotado
-            </button>
-        {% endif %}    
-        <a href="{% url 'store' %}" class="btn btn-outline-dark rounded-pill px-4">
-          <i class="bi bi-arrow-left me-2"></i> Volver
-        </a>
-
-        <button class="btn {% if user.is_authenticated and user in product.likes.all %}btn-primary{% else %}btn-outline-primary{% endif %} like-product-btn">
-            {% if user.is_authenticated and user in product.likes.all %}
-              Ya te gusta 👍🏻
-            {% else %}
-              Me gusta 👍🏻
-            {% endif %}
-        </button>          
-        <span id="like-count">{{ product.likes.count }}</span>
-      </div>
-
-      <!-- Botones sociales -->
-      <div class="d-flex gap-2">
-        <button class="btn btn-outline-primary btn-sm rounded-circle"><i class="bi bi-facebook"></i></button>
-        <button class="btn btn-outline-info btn-sm rounded-circle"><i class="bi bi-twitter-x"></i></button>
-        <button class="btn btn-outline-danger btn-sm rounded-circle"><i class="bi bi-instagram"></i></button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Comentarios -->
-  <div class="mt-5">
-    <h4 class="mb-3">Comentarios</h4>
-    <form method="post" action="{% url 'add_comment' product.id %}">
-      {% csrf_token %}
-      <div class="mb-3">
-        <label for="comment" class="form-label">Deja tu comentario:</label>
-        <textarea class="form-control" id="comment" name="comment" rows="3" required></textarea>
-      </div>
-      <button type="submit" class="btn btn-success">Enviar comentario</button>
-    </form>
-
-    <hr>
-
-    <div class="mt-4">
-      {% for comment in comments %}
-        <div class="border rounded p-2 mb-2">
-          <p>{{ comment.text }}</p>
-          <small>Por {{ comment.user.username }} - {{ comment.created_at }}</small>
-          <div class="mt-2 d-flex align-items-center">
-            <button
-            class="btn {% if user in comment.likes.all %}btn-primary{% else %}btn-outline-primary{% endif %} like-comment"
-            data-id="{{ comment.id }}"
-            id="like-comment-btn-{{ comment.id }}"
-          >
-          👍🏻 {% if user in comment.likes.all %}Ya te gusta{% else %}Me gusta{% endif %}
-          </button>          
-            <span id="comment-like-{{ comment.id }}" class="ms-2">{{ comment.likes.count }}</span>
-          </div>
-        </div>
-      {% endfor %}
-    </div>
-  </div>
-</div>
-
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    // Miniaturas
-    const thumbnails = document.querySelectorAll(".thumbnail-img");
-    const mainImage = document.getElementById("main-image");
-
-    thumbnails.forEach((thumb) => {
-      thumb.addEventListener("click", () => {
-        mainImage.src = thumb.src;
-      });
-    });
-
-    // Like del producto
-    const likeBtn = document.querySelector('.like-product-btn');
-    if (likeBtn) {
-      likeBtn.addEventListener('click', function () {
-        fetch("{% url 'like_product' product.id %}", {
-          method: 'POST',
-          headers: {
-            'X-CSRFToken': '{{ csrf_token }}'
-          }
-        })
-        .then(response => response.json())
-        .then(data => {
-          document.getElementById('like-count').textContent = data.likes_count;
-          likeBtn.innerHTML = data.liked ? '👍🏻 Ya te gusta' : '👍🏻 Me gusta';
-          likeBtn.classList.toggle('btn-primary', data.liked);
-          likeBtn.classList.toggle('btn-outline-primary', !data.liked);
-        })
-        .catch(error => console.error('Error al dar like:', error));
-      });
+{% block extra_css %}
+<style>
+    /* Breadcrumbs */
+    .breadcrumbs {
+        background: var(--light-bg);
+        padding: 1rem 2rem;
     }
 
-// Likes de los comentarios
-document.querySelectorAll('.like-comment').forEach(button => {
-  button.addEventListener('click', function () {
-    const commentId = this.dataset.id;
-    fetch(`/comment/${commentId}/like/`, {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': '{{ csrf_token }}'
-      }
-    })
-    .then(response => response.json())
-    .then(data => {
-      document.getElementById(`comment-like-${commentId}`).textContent = data.likes_count;
-      this.classList.toggle('btn-primary', data.liked);
-      this.classList.toggle('btn-outline-primary', !data.liked);
+    .breadcrumbs ul {
+        list-style: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0;
+        padding: 0;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
 
-      // 👇 Cambiar el texto del botón:
-      this.innerHTML = data.liked ? '👍🏻 Ya te gusta' : '👍🏻 Me gusta';
-    })
-    .catch(error => console.error('Error al dar like al comentario:', error));
-  });
+    .breadcrumbs li {
+        color: var(--text-light);
+    }
+
+    .breadcrumbs a {
+        color: var(--primary-color);
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .breadcrumbs a:hover {
+        color: var(--accent-color);
+    }
+
+    /* Product Detail */
+    .product-detail-section {
+        padding: 3rem 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .product-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4rem;
+        margin-bottom: 4rem;
+    }
+
+    /* Image Gallery */
+    .product-gallery {
+        position: sticky;
+        top: 100px;
+        height: fit-content;
+    }
+
+    .main-image {
+        width: 100%;
+        height: 500px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        overflow: hidden;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    .main-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .main-image-placeholder {
+        font-size: 8rem;
+        color: white;
+        opacity: 0.3;
+    }
+
+    .thumbnail-gallery {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+    }
+
+    .thumbnail {
+        width: 100%;
+        height: 100px;
+        background: var(--light-bg);
+        border-radius: 10px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 3px solid transparent;
+    }
+
+    .thumbnail:hover,
+    .thumbnail.active {
+        border-color: var(--primary-color);
+        transform: translateY(-5px);
+    }
+
+    .thumbnail img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* Product Info */
+    .product-info-main {
+        padding: 2rem 0;
+    }
+
+    .product-category {
+        color: var(--primary-color);
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 1rem;
+    }
+
+    .product-name {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 1rem;
+        line-height: 1.2;
+    }
+
+    .product-meta {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 2px solid var(--light-bg);
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-light);
+        font-size: 0.9rem;
+    }
+
+    .meta-item i {
+        color: var(--primary-color);
+    }
+
+    .product-pricing {
+        margin-bottom: 2rem;
+    }
+
+    .price-main {
+        font-size: 3rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .price-old {
+        font-size: 1.5rem;
+        color: var(--text-light);
+        text-decoration: line-through;
+        margin-left: 1rem;
+    }
+
+    .stock-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stock-status.available {
+        background: rgba(0, 184, 148, 0.1);
+        color: #00b894;
+    }
+
+    .stock-status.out-of-stock {
+        background: rgba(214, 48, 49, 0.1);
+        color: #d63031;
+    }
+
+    .product-description {
+        margin-bottom: 2rem;
+    }
+
+    .product-description h4 {
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+        color: var(--text-dark);
+    }
+
+    .product-description p {
+        color: var(--text-light);
+        line-height: 1.8;
+    }
+
+    .product-specs {
+        background: var(--light-bg);
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+
+    .spec-item {
+        display: flex;
+        padding: 0.8rem 0;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .spec-item:last-child {
+        border-bottom: none;
+    }
+
+    .spec-label {
+        font-weight: 600;
+        color: var(--text-dark);
+        min-width: 120px;
+    }
+
+    .spec-value {
+        color: var(--text-light);
+    }
+
+    /* Add to Cart */
+    .add-to-cart-section {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .quantity-selector {
+        display: flex;
+        align-items: center;
+        border: 2px solid #e1e8ed;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .quantity-btn {
+        width: 45px;
+        height: 50px;
+        background: white;
+        border: none;
+        cursor: pointer;
+        font-size: 1.2rem;
+        transition: all 0.3s ease;
+    }
+
+    .quantity-btn:hover {
+        background: var(--light-bg);
+    }
+
+    .quantity-input {
+        width: 60px;
+        height: 50px;
+        border: none;
+        text-align: center;
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+
+    .btn-add-to-cart {
+        flex: 1;
+        padding: 1rem 2rem;
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 1.2rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.8rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-add-to-cart:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(255, 140, 0, 0.3);
+    }
+
+    .btn-add-to-cart:disabled {
+        background: #dfe6e9;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* Social Actions */
+    .social-actions {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .social-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.8rem 1.5rem;
+        border: 2px solid #e1e8ed;
+        background: white;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: var(--text-dark);
+    }
+
+    .social-btn:hover {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+
+    .social-btn.liked {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+    }
+
+    /* Responsive */
+    @media (max-width: 968px) {
+        .product-layout {
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        .product-gallery {
+            position: relative;
+            top: 0;
+        }
+
+        .product-name {
+            font-size: 2rem;
+        }
+
+        .price-main {
+            font-size: 2.5rem;
+        }
+
+        .add-to-cart-section {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Breadcrumbs -->
+<nav class="breadcrumbs">
+    <ul>
+        <li><a href="{% url 'index' %}">Inicio</a></li>
+        <li>/</li>
+        <li><a href="{% url 'store' %}">Productos</a></li>
+        <li>/</li>
+        <li><a href="?categoria={{ product.category }}">{{ product.category }}</a></li>
+        <li>/</li>
+        <li>{{ product.name }}</li>
+    </ul>
+</nav>
+
+<!-- Product Detail -->
+<section class="product-detail-section">
+    <div class="product-layout">
+        <!-- Image Gallery -->
+        <div class="product-gallery">
+            <div class="main-image" id="mainImage">
+                {% if product.image %}
+                <img src="{{ product.image.url }}" alt="{{ product.name }}" id="mainImageSrc">
+                {% else %}
+                <div class="main-image-placeholder">
+                    <i class="fas fa-cog"></i>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="thumbnail-gallery">
+                {% if product.image %}
+                <div class="thumbnail active" onclick="changeImage('{{ product.image.url }}', this)">
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                </div>
+                {% endif %}
+                {% if product.imageuno %}
+                <div class="thumbnail" onclick="changeImage('{{ product.imageuno.url }}', this)">
+                    <img src="{{ product.imageuno.url }}" alt="{{ product.name }}">
+                </div>
+                {% endif %}
+                {% if product.imagedos %}
+                <div class="thumbnail" onclick="changeImage('{{ product.imagedos.url }}', this)">
+                    <img src="{{ product.imagedos.url }}" alt="{{ product.name }}">
+                </div>
+                {% endif %}
+                {% if product.imagetres %}
+                <div class="thumbnail" onclick="changeImage('{{ product.imagetres.url }}', this)">
+                    <img src="{{ product.imagetres.url }}" alt="{{ product.name }}">
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Product Info -->
+        <div class="product-info-main">
+            <div class="product-category">{{ product.section|default:"Refacciones" }}</div>
+            
+            <h1 class="product-name">{{ product.name }}</h1>
+            
+            <div class="product-meta">
+                <div class="meta-item">
+                    <i class="fas fa-barcode"></i>
+                    <span>SKU: {{ product.id|stringformat:"06d" }}</span>
+                </div>
+                {% if product.brand %}
+                <div class="meta-item">
+                    <i class="fas fa-tag"></i>
+                    <span>{{ product.brand }}</span>
+                </div>
+                {% endif %}
+                {% if product.seller %}
+                <div class="meta-item">
+                    <i class="fas fa-store"></i>
+                    <span>{{ product.seller }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="product-pricing">
+                <div class="price-main">${{ product.price|floatformat:2 }}</div>
+                {% if product.offer and product.offer_price %}
+                <span class="price-old">${{ product.offer_price|floatformat:2 }}</span>
+                {% endif %}
+            </div>
+
+            <div class="stock-status {% if product.quantity > 0 %}available{% else %}out-of-stock{% endif %}">
+                {% if product.quantity > 0 %}
+                <i class="fas fa-check-circle"></i>
+                <span>En stock ({{ product.quantity }} disponibles)</span>
+                {% else %}
+                <i class="fas fa-times-circle"></i>
+                <span>Agotado</span>
+                {% endif %}
+            </div>
+
+            {% if product.description %}
+            <div class="product-description">
+                <h4>Descripción del producto</h4>
+                <p>{{ product.description|linebreaks }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Especificaciones -->
+            <div class="product-specs">
+                <h4 style="margin-bottom: 1rem; color: var(--text-dark);">Especificaciones técnicas</h4>
+                {% if product.brand %}
+                <div class="spec-item">
+                    <div class="spec-label">Marca:</div>
+                    <div class="spec-value">{{ product.brand }}</div>
+                </div>
+                {% endif %}
+                {% if product.model %}
+                <div class="spec-item">
+                    <div class="spec-label">Modelo:</div>
+                    <div class="spec-value">{{ product.model }}</div>
+                </div>
+                {% endif %}
+                {% if product.year %}
+                <div class="spec-item">
+                    <div class="spec-label">Año:</div>
+                    <div class="spec-value">{{ product.year }}</div>
+                </div>
+                {% endif %}
+                {% if product.quality %}
+                <div class="spec-item">
+                    <div class="spec-label">Calidad:</div>
+                    <div class="spec-value">{{ product.quality }}</div>
+                </div>
+                {% endif %}
+                {% if product.qualitydos %}
+                <div class="spec-item">
+                    <div class="spec-label">Calidad 2:</div>
+                    <div class="spec-value">{{ product.qualitydos }}</div>
+                </div>
+                {% endif %}
+                {% if product.qualitytres %}
+                <div class="spec-item">
+                    <div class="spec-label">Calidad 3:</div>
+                    <div class="spec-value">{{ product.qualitytres }}</div>
+                </div>
+                {% endif %}
+                {% if product.proveedor %}
+                <div class="spec-item">
+                    <div class="spec-label">Proveedor:</div>
+                    <div class="spec-value">{{ product.proveedor }}</div>
+                </div>
+                {% endif %}
+                {% if product.category %}
+                <div class="spec-item">
+                    <div class="spec-label">Categoría:</div>
+                    <div class="spec-value">{{ product.category }}</div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Add to Cart Section -->
+            <div class="add-to-cart-section">
+                <div class="quantity-selector">
+                    <button type="button" class="quantity-btn" onclick="updateQuantity(-1)">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <input type="number" id="quantity" class="quantity-input" value="1" min="1" max="{{ product.quantity }}" readonly>
+                    <button type="button" class="quantity-btn" onclick="updateQuantity(1)">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                
+                {% if product.quantity > 0 %}
+                {% if request.user.is_authenticated %}
+                    {% if request.user.is_superuser or request.user.is_staff %}
+                        <button class="btn-add-to-cart" disabled>
+                            <i class="fas fa-user-shield"></i>
+                            <span>Eres administrador</span>
+                        </button>
+                    {% else %}
+                        <button class="btn-add-to-cart update-cart" data-product="{{ product.id }}" data-action="add">
+                            <i class="fas fa-cart-plus"></i>
+                            <span>Agregar al carrito</span>
+                        </button>
+                    {% endif %}
+                {% else %}
+                    <button class="btn-add-to-cart" onclick="window.location.href='{% url 'login' %}'">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>Iniciar sesión para comprar</span>
+                    </button>
+                {% endif %}
+                {% else %}
+                <button class="btn-add-to-cart" disabled>
+                    <i class="fas fa-times"></i>
+                    <span>Producto agotado</span>
+                </button>
+                {% endif %}
+            </div>
+
+            <!-- Social Actions -->
+            <div class="social-actions">
+                <button type="button" class="social-btn like-product-btn {% if user.is_authenticated and user in product.likes.all %}liked{% endif %}">
+                    <i class="fas fa-heart"></i>
+                    <span id="like-text">
+                        {% if user.is_authenticated and user in product.likes.all %}
+                            Ya te gusta
+                        {% else %}
+                            Me gusta
+                        {% endif %}
+                    </span>
+                    <span id="like-count" style="margin-left: 0.5rem;">({{ product.likes.count }})</span>
+                </button>
+                <button type="button" class="social-btn" onclick="shareProduct()">
+                    <i class="fas fa-share-alt"></i>
+                    <span>Compartir</span>
+                </button>
+                <a href="{% url 'store' %}" class="social-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Volver al catálogo</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Comments Section -->
+<section style="padding: 3rem 2rem; max-width: 1400px; margin: 0 auto; background: var(--light-bg);">
+    <div style="background: white; border-radius: 15px; padding: 2rem; box-shadow: 0 5px 20px rgba(0,0,0,0.1);">
+        <h3 style="margin-bottom: 2rem; color: var(--text-dark);">
+            <i class="fas fa-comments" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
+            Comentarios y reseñas
+        </h3>
+
+        <!-- Comment Form -->
+        <form method="post" action="{% url 'add_comment' product.id %}" style="margin-bottom: 2rem; padding: 1.5rem; background: var(--light-bg); border-radius: 10px;">
+            {% csrf_token %}
+            <div style="margin-bottom: 1rem;">
+                <label for="comment" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-dark);">
+                    Deja tu comentario:
+                </label>
+                <textarea class="form-control" id="comment" name="comment" rows="4" required
+                         placeholder="Comparte tu experiencia con este producto..."
+                         style="border: 2px solid #e1e8ed; border-radius: 10px; padding: 1rem; font-size: 1rem; transition: border-color 0.3s ease;">
+                </textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" 
+                    style="background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); border: none; padding: 0.8rem 2rem; border-radius: 10px; font-weight: 600;">
+                <i class="fas fa-paper-plane" style="margin-right: 0.5rem;"></i>
+                Enviar comentario
+            </button>
+        </form>
+
+        <!-- Comments List -->
+        {% if comments %}
+            {% for comment in comments %}
+            <div style="padding: 1.5rem; border-bottom: 2px solid var(--light-bg); margin-bottom: 1rem;">
+                <div style="display: flex; align-items: start; gap: 1rem;">
+                    <div style="width: 50px; height: 50px; background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem;">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                            <h6 style="margin: 0; color: var(--text-dark); font-weight: 600;">
+                                {{ comment.user.username|default:"Usuario anónimo" }}
+                            </h6>
+                            <small style="color: var(--text-light);">
+                                {{ comment.created_at|date:"d/m/Y H:i" }}
+                            </small>
+                        </div>
+                        <p style="margin-bottom: 1rem; color: var(--text-light); line-height: 1.6;">
+                            {{ comment.text|linebreaks }}
+                        </p>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <button class="social-btn like-comment {% if user in comment.likes.all %}liked{% endif %}" 
+                                    data-id="{{ comment.id }}" id="like-comment-btn-{{ comment.id }}"
+                                    style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                                <i class="fas fa-heart"></i>
+                                <span>
+                                    {% if user in comment.likes.all %}
+                                        Ya te gusta
+                                    {% else %}
+                                        Me gusta
+                                    {% endif %}
+                                </span>
+                                <span id="comment-like-{{ comment.id }}" style="margin-left: 0.3rem;">({{ comment.likes.count }})</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <div style="text-align: center; padding: 3rem; color: var(--text-light);">
+            <i class="fas fa-comments" style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+            <h5 style="margin-bottom: 0.5rem;">Aún no hay comentarios</h5>
+            <p>¡Sé el primero en comentar sobre este producto!</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Image Gallery Functions
+    window.changeImage = function(imageSrc, thumbnailElement) {
+        const mainImage = document.getElementById('mainImageSrc');
+        if (mainImage) {
+            mainImage.src = imageSrc;
+        }
+        
+        // Update active thumbnail
+        document.querySelectorAll('.thumbnail').forEach(thumb => {
+            thumb.classList.remove('active');
+        });
+        thumbnailElement.classList.add('active');
+    };
+
+    // Quantity Selector Functions
+    window.updateQuantity = function(change) {
+        const quantityInput = document.getElementById('quantity');
+        const currentValue = parseInt(quantityInput.value);
+        const maxValue = parseInt(quantityInput.max);
+        const minValue = parseInt(quantityInput.min);
+        
+        const newValue = currentValue + change;
+        
+        if (newValue >= minValue && newValue <= maxValue) {
+            quantityInput.value = newValue;
+        }
+    };
+
+    // Share Product Function
+    window.shareProduct = function() {
+        if (navigator.share) {
+            navigator.share({
+                title: '{{ product.name }}',
+                text: 'Mira este producto: {{ product.name }}',
+                url: window.location.href
+            });
+        } else {
+            // Fallback - copy to clipboard
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                alert('Enlace copiado al portapapeles');
+            });
+        }
+    };
+
+    // Add to Wishlist Function
+    window.addToWishlist = function() {
+        // This would connect to your wishlist functionality
+        alert('Función de lista de deseos próximamente');
+    };
+
+    // Like Product Functionality
+    const likeBtn = document.querySelector('.like-product-btn');
+    if (likeBtn) {
+        likeBtn.addEventListener('click', function () {
+            fetch("{% url 'like_product' product.id %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const likeCount = document.getElementById('like-count');
+                const likeText = document.getElementById('like-text');
+                
+                if (likeCount) {
+                    likeCount.textContent = `(${data.likes_count})`;
+                }
+                if (likeText) {
+                    likeText.textContent = data.liked ? 'Ya te gusta' : 'Me gusta';
+                }
+                likeBtn.classList.toggle('liked', data.liked);
+            })
+            .catch(error => console.error('Error al dar like:', error));
+        });
+    }
+
+    // Comment Likes Functionality
+    document.querySelectorAll('.like-comment').forEach(button => {
+        button.addEventListener('click', function () {
+            const commentId = this.dataset.id;
+            fetch(`/comment/${commentId}/like/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const likeCountElement = document.getElementById(`comment-like-${commentId}`);
+                if (likeCountElement) {
+                    likeCountElement.textContent = `(${data.likes_count})`;
+                }
+                this.classList.toggle('liked', data.liked);
+                
+                // Update button text
+                const span = this.querySelector('span:not([id])');
+                if (span) {
+                    span.textContent = data.liked ? 'Ya te gusta' : 'Me gusta';
+                }
+            })
+            .catch(error => console.error('Error al dar like al comentario:', error));
+        });
+    });
+
+    // Smooth scroll for form focus
+    const commentTextarea = document.getElementById('comment');
+    if (commentTextarea) {
+        commentTextarea.addEventListener('focus', function() {
+            this.style.borderColor = 'var(--primary-color)';
+        });
+        commentTextarea.addEventListener('blur', function() {
+            this.style.borderColor = '#e1e8ed';
+        });
+    }
+
+    // Enhanced Add to Cart with Animation
+    const addToCartBtns = document.querySelectorAll('.update-cart');
+    addToCartBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const originalText = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Agregando...</span>';
+            this.disabled = true;
+            
+            setTimeout(() => {
+                this.innerHTML = '<i class="fas fa-check"></i><span>¡Agregado!</span>';
+                setTimeout(() => {
+                    this.innerHTML = originalText;
+                    this.disabled = false;
+                }, 1500);
+            }, 1000);
+        });
+    });
 });
-  });
 </script>
-
 {% endblock %}

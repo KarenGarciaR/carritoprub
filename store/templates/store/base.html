@@ -281,7 +281,29 @@
             box-shadow: 0 6px 20px rgba(255, 140, 0, 0.4) !important;
         }
 
-        /* Responsive */
+        /* Enhanced Responsive Design */
+        @media (max-width: 1200px) {
+            .container {
+                max-width: 95%;
+                padding: 0 1rem;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .hero-section h1 {
+                font-size: 3rem;
+            }
+            
+            .hero-section p {
+                font-size: 1.1rem;
+            }
+            
+            .features-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 2rem;
+            }
+        }
+
         @media (max-width: 768px) {
             .nav-menu {
                 position: fixed;
@@ -295,10 +317,27 @@
                 box-shadow: 0 10px 27px rgba(0,0,0,0.05);
                 padding: 2rem 0;
                 gap: 1rem;
+                max-height: calc(100vh - 80px);
+                overflow-y: auto;
+                z-index: 1000;
             }
 
             .nav-menu.active {
                 left: 0;
+            }
+
+            .nav-menu li a {
+                padding: 1rem 2rem;
+                display: block;
+                border-radius: 8px;
+                margin: 0 1rem;
+                transition: all 0.3s ease;
+            }
+
+            .nav-menu li a:hover {
+                background: var(--light-bg);
+                color: var(--primary-color);
+                transform: translateX(5px);
             }
 
             .menu-toggle {
@@ -313,6 +352,233 @@
                 padding: 0.5rem 1rem;
                 font-size: 0.9rem;
             }
+
+            .hero-section {
+                padding: 4rem 1.5rem;
+                text-align: center;
+            }
+
+            .hero-section h1 {
+                font-size: 2.5rem;
+                line-height: 1.2;
+                margin-bottom: 1rem;
+            }
+
+            .hero-section p {
+                font-size: 1rem;
+                margin-bottom: 2rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+                margin: 3rem 1rem;
+            }
+
+            .feature-card {
+                text-align: center;
+                padding: 2rem 1.5rem;
+            }
+
+            .products-section {
+                padding: 3rem 1rem;
+            }
+
+            .footer-content {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 2rem;
+                text-align: left;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .navbar {
+                padding: 0.5rem 1rem;
+            }
+
+            .navbar-brand span {
+                font-size: 1.3rem;
+            }
+
+            .hero-section {
+                padding: 3rem 1rem;
+            }
+
+            .hero-section h1 {
+                font-size: 2rem;
+                margin-bottom: 1rem;
+            }
+
+            .hero-section p {
+                font-size: 0.95rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .btn-cta {
+                width: 100%;
+                padding: 1rem 2rem;
+                font-size: 1rem;
+                margin-bottom: 1rem;
+            }
+
+            .features-grid {
+                margin: 2rem 0.5rem;
+                gap: 1.5rem;
+            }
+
+            .feature-card {
+                padding: 1.5rem;
+            }
+
+            .feature-card h3 {
+                font-size: 1.2rem;
+                margin-bottom: 0.5rem;
+            }
+
+            .feature-card p {
+                font-size: 0.9rem;
+            }
+
+            .products-section {
+                padding: 2rem 0.5rem;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+                gap: 2rem;
+            }
+
+            .social-links {
+                justify-content: center;
+                margin-top: 1rem;
+            }
+
+            /* Better touch targets for mobile */
+            .nav-menu li a {
+                padding: 1.2rem 2rem;
+                font-size: 1.1rem;
+                min-height: 48px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .user-controls a {
+                min-width: 44px;
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-section {
+                padding: 2.5rem 0.75rem;
+            }
+
+            .hero-section h1 {
+                font-size: 1.8rem;
+            }
+
+            .features-grid {
+                margin: 1.5rem 0.25rem;
+            }
+
+            .feature-card {
+                padding: 1rem;
+            }
+
+            .navbar-brand span {
+                font-size: 1.2rem;
+            }
+
+            .footer-content {
+                padding: 0 0.75rem;
+            }
+        }
+
+        /* Landscape mobile optimization */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .hero-section {
+                padding: 2rem 1rem;
+            }
+
+            .hero-section h1 {
+                font-size: 2rem;
+                margin-bottom: 0.5rem;
+            }
+
+            .hero-section p {
+                margin-bottom: 1rem;
+            }
+
+            .nav-menu {
+                top: 70px;
+                max-height: calc(100vh - 70px);
+            }
+        }
+
+        /* High DPI displays */
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+            .navbar-brand i {
+                image-rendering: -webkit-optimize-contrast;
+            }
+        }
+
+        /* Dark Theme Support */
+        .dark-theme {
+            --primary-color: #FF8C00;
+            --accent-color: #FF6B35;
+            --secondary-color: #1a1a2e;
+            --text-dark: #ffffff;
+            --text-light: #b0b0b0;
+            --white: #2c2c54;
+            --light-bg: #40407a;
+            --border-color: #40407a;
+            background-color: #16213e !important;
+            color: #ffffff !important;
+        }
+
+        .dark-theme .navbar {
+            background: rgba(28, 28, 84, 0.95) !important;
+            backdrop-filter: blur(10px);
+        }
+
+        .dark-theme .hero-section {
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.9), rgba(64, 64, 122, 0.8)), 
+                        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="%23ffffff" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        }
+
+        .dark-theme .product-card,
+        .dark-theme .feature-card,
+        .dark-theme .cart-item,
+        .dark-theme .box-element {
+            background: rgba(44, 44, 84, 0.9) !important;
+            border: 1px solid rgba(64, 64, 122, 0.5);
+            color: #ffffff;
+        }
+
+        .dark-theme .footer {
+            background: #1a1a2e !important;
+        }
+
+        .dark-theme .form-control {
+            background: rgba(44, 44, 84, 0.9);
+            border-color: rgba(64, 64, 122, 0.5);
+            color: #ffffff;
+        }
+
+        .dark-theme .form-control:focus {
+            background: rgba(44, 44, 84, 1);
+            border-color: var(--primary-color);
+            color: #ffffff;
+        }
+
+        /* Smooth theme transition */
+        * {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
     </style>
 
@@ -329,9 +595,9 @@
             
             <ul class="nav-menu" id="navMenu">
                 <li><a href="{% url 'index' %}" class="nav-link">Inicio</a></li>
-                <li><a href="#" class="nav-link">Nosotros</a></li>
+                <li><a href="{% url 'nosotros' %}" class="nav-link">Nosotros</a></li>
                 <li><a href="{% url 'store' %}" class="nav-link">Productos</a></li>
-                <li><a href="#" class="nav-link">Contacto</a></li>
+                <li><a href="{% url 'contacto' %}" class="nav-link">Contacto</a></li>
             </ul>
             
             <div class="user-controls">
@@ -427,9 +693,9 @@
             <div class="footer-section">
                 <h3>Enlaces Rápidos</h3>
                 <a href="{% url 'index' %}">Inicio</a>
-                <a href="#">Nosotros</a>
+                <a href="{% url 'nosotros' %}">Nosotros</a>
                 <a href="{% url 'store' %}">Productos</a>
-                <a href="#">Contacto</a>
+                <a href="{% url 'contacto' %}">Contacto</a>
             </div>
             
             <div class="footer-section">
@@ -457,6 +723,7 @@
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script type="text/javascript" src="{% static 'js/cart.js' %}"></script>
+    <!-- <script type="text/javascript" src="{% static 'js/modern-effects.js' %}"></script> -->
 
     <script>
         // Token CSRF

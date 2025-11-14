@@ -1,510 +1,1265 @@
-{% extends 'store/main.html' %}
+{% extends 'store/base.html' %}
 {% load static %}
-{% block content %}
 
-<div class="row">
-	<div class="col-lg-6">
-		<div class="box-element" id="form-wrapper">
-            <div class="card-header bg-primary text-white mb-4 rounded">
-                <h5 class="mb-0"><i class="bi bi-truck"></i> Información de Envío</h5>
-                <small><i class="bi bi-gift"></i> Envío gratuito en toda la república</small>
-            </div>
-            
-            {% csrf_token %}
-            <form id="form">
-                <!-- Información Personal -->
-                <div id="user-info">
-                    <div class="row mb-3">
-                        <div class="col-12">
-                            <h6 class="text-primary mb-3">
-                                <i class="bi bi-person-circle"></i> Datos del Cliente
-                            </h6>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="name" class="form-label fw-bold">
-                                <i class="bi bi-person"></i> Nombre Completo *
-                            </label>
-                            <input required class="form-control" type="text" id="name" name="name" 
-                                   placeholder="Ej: Juan Pérez García"
-                                   value="{% if customer %}{{ customer.name }}{% endif %}">
-                            <div class="form-text">Nombre como aparece en tu identificación</div>
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label for="email" class="form-label fw-bold">
-                                <i class="bi bi-envelope"></i> Correo Electrónico *
-                            </label>
-                            <input required class="form-control" type="email" id="email" name="email" 
-                                   placeholder="correo@ejemplo.com"
-                                   value="{% if customer %}{{ customer.email }}{% endif %}">
-                            <div class="form-text">Para notificaciones del pedido</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Información de Envío -->
-                <div id="shipping-info">
-                    <hr class="my-4">
-                    <div class="row mb-3">
-                        <div class="col-12">
-                            <h6 class="text-primary mb-3">
-                                <i class="bi bi-geo-alt"></i> Dirección de Entrega
-                            </h6>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="cellphone" class="form-label fw-bold">
-                                <i class="bi bi-telephone"></i> Teléfono de Contacto *
-                            </label>
-                            <input required class="form-control" type="tel" id="cellphone" name="cellphone" 
-                                   placeholder="Ej: 981 123 4567"
-                                   value="{% if customer %}{{ customer.phone_number }}{% endif %}">
-                            <div class="form-text">Para coordinar la entrega</div>
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label for="zipcode" class="form-label fw-bold">
-                                <i class="bi bi-mailbox"></i> Código Postal *
-                            </label>
-                            <input required class="form-control" type="text" id="zipcode" name="zipcode" 
-                                   placeholder="Ej: 24000"
-                                   pattern="[0-9]{5}"
-                                   maxlength="5"
-                                   value="{% if customer %}{{ customer.zip_code }}{% endif %}">
-                            <div class="form-text">5 dígitos numéricos</div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-12 mb-3">
-                            <label for="address" class="form-label fw-bold">
-                                <i class="bi bi-house-door"></i> Dirección Completa *
-                            </label>
-                            <input required class="form-control" type="text" id="address" name="address" 
-                                   placeholder="Ej: Calle 5 de Mayo #123, Colonia Centro"
-                                   value="{% if customer %}{{ customer.address }}{% endif %}">
-                            <div class="form-text">Calle, número, colonia o fraccionamiento</div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="city" class="form-label fw-bold">
-                                <i class="bi bi-building"></i> Ciudad *
-                            </label>
-                            <input required class="form-control" type="text" id="city" name="city" 
-                                   placeholder="Ej: Campeche"
-                                   value="{% if customer %}{{ customer.municipality }}{% endif %}">
-                            <div class="form-text">Ciudad donde vives</div>
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label for="state" class="form-label fw-bold">
-                                <i class="bi bi-map"></i> Estado/Municipio *
-                            </label>
-                            <input required class="form-control" type="text" id="state" name="state" 
-                                   placeholder="Ej: Campeche"
-                                   value="{% if customer %}{{ customer.state }}{% endif %}">
-                            <div class="form-text">Estado o municipio</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Referencias adicionales -->
-                    <div class="row">
-                        <div class="col-12 mb-3">
-                            <label for="referencias" class="form-label fw-bold">
-                                <i class="bi bi-signpost"></i> Referencias de Ubicación (Opcional)
-                            </label>
-                            <textarea class="form-control" id="referencias" name="referencias" rows="2"
-                                      placeholder="Ej: Entre las calles Hidalgo y Morelos, casa de color azul, portón café"></textarea>
-                            <div class="form-text">Ayúdanos a encontrar tu dirección más fácilmente</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <hr class="my-4">
-                
-                <!-- Botón de continuar -->
-                <div class="d-grid">
-                    <button id="form-button" class="btn btn-danger btn-lg rounded-pill" type="submit"
-                            style="background-color: #e9820d; color: white;"
-                            onmouseover="this.style.backgroundColor='#A03A3A';"
-                            onmouseout="this.style.backgroundColor='#CB4C4C';">
-                        <i class="bi bi-arrow-right-circle"></i> Continuar al Pago
-                    </button>
-                </div>
-            </form>
-		</div>
-        <br>
-        <div class="box-element hidden" id="payment-info">
-            <div class="card-header bg-success text-white mb-4 rounded">
-                <h5 class="mb-0"><i class="bi bi-credit-card"></i> Método de Pago</h5>
-                <small>Selecciona cómo prefieres pagar tu pedido</small>
-            </div>
-            
-            <!-- Pago directo -->
-            <div class="card mb-3">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-2">
-                        <i class="bi bi-cash-coin text-success me-2 fs-4"></i>
-                        <div>
-                            <h6 class="mb-0">Pago Directo</h6>
-                            <small class="text-muted">Transferencia bancaria o efectivo</small>
-                        </div>
-                    </div>
-                    <p class="text-muted small mb-3">
-                        Puedes pagar mediante transferencia bancaria o efectivo contra entrega. 
-                        Te enviaremos los datos bancarios por correo.
-                    </p>
-                    <button id="make-payment" class="btn btn-success w-100 rounded-pill">
-                        <i class="bi bi-check-circle"></i> Finalizar Pedido - Pago Directo
-                    </button>
-                </div>
-            </div>
-        
-            <!-- Separador -->
-            <div class="text-center my-3">
-                <span class="badge bg-secondary">O</span>
-            </div>
-            
-            <!-- PayPal -->
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-2">
-                        <i class="bi bi-paypal text-primary me-2 fs-4"></i>
-                        <div>
-                            <h6 class="mb-0">PayPal</h6>
-                            <small class="text-muted">Pago seguro con PayPal</small>
-                        </div>
-                    </div>
-                    <p class="text-muted small mb-3">
-                        Paga de forma segura con tu cuenta PayPal o tarjeta de crédito/débito.
-                    </p>
-                    <div id="paypal-button" class="mt-2"></div>
-                </div>
-            </div>
-        </div>        
-	</div>
+{% block title %}Checkout - ALM Refaccionaria{% endblock %}
 
-	<div class="col-lg-6">
-        <div class="box-element">
-            <hr>
-            <h3>Resumen del pedido</h3>
-            <hr>
-            {% for item in items %}
-            <div class="cart-row">
-                <div style="flex:2"><img class="row-image" src="{{item.product.imageURL}}"></div>
-                <div style="flex:2"><p>{{item.product.name}}</p></div>
-                <div style="flex:1"><p>${{item.product.price|floatformat:2}}</p></div>
-                <div style="flex:1"><p>x{{item.quantity}}</p></div>
-            </div>
-            {% endfor %}
-            <h5>Items: {{order.get_cart_items}}</h5>
-            <h5>Total: ${{order.get_cart_total|floatformat:2}}</h5>
-        </div>
-	</div>
-</div>
-
-<script src="https://www.paypalobjects.com/api/checkout.js"></script>
-
-<script type="text/javascript">
-    document.addEventListener('DOMContentLoaded', function () {
-        var shipping = "{{ order.shipping|escapejs }}";
-        var total = "{{ order.get_cart_total|floatformat:2 }}";
-        var user = "{{ request.user|escapejs }}";
-        var orderHistoryUrl = "{% url 'order_history' %}";
-        var csrftoken = getCookie('csrftoken');
-
-        var form = document.getElementById('form');
-
-        form.addEventListener('submit', function(e){
-            e.preventDefault();
-            console.log('Form Submitted...');
-            document.getElementById('form-button').classList.add('hidden');
-            document.getElementById('payment-info').classList.remove('hidden');
-        });
-
-        document.getElementById('make-payment').addEventListener('click', function(e){
-            processOrder();
-        });
-
-        paypal.Button.render({
-            env: 'sandbox',
-            client: {
-                sandbox: 'demo_sandbox_client_id',  // Reemplaza con tu client_id real
-                production: 'demo_production_client_id'
-            },
-            locale: 'en_MX',
-            style: {
-                size: 'small',
-                color: 'gold',
-                shape: 'pill',
-            },
-            commit: true,
-            payment: function(data, actions) {
-                return actions.payment.create({
-                    transactions: [{
-                        amount: {
-                            total: total,
-                            currency: 'MXN'
-                        }
-                    }]
-                });
-            },
-            onAuthorize: function(data, actions) {
-                return actions.payment.execute().then(function() {
-                    console.log("Pago autorizado por PayPal");
-                    processOrder();
-                });
-            }
-        }, '#paypal-button');
-
-        function processOrder() {
-            console.log('Iniciando procesamiento de la orden...');
-
-            var userFormData = {
-                'name': form.name.value,
-                'email': form.email.value,
-                'total': total
-            };
-
-            var shippingInfo = {
-                'cellphone': form.cellphone.value,
-                'address': form.address.value,
-                'city': form.city.value,
-                'state': form.state.value,
-                'zipcode': form.zipcode.value,
-                'referencias': form.referencias ? form.referencias.value : ''
-            };
-
-            if (shipping !== 'False') {
-                // Validaciones más específicas con SweetAlert2
-                if (!form.name.value.trim()) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Nombre requerido',
-                        text: 'Por favor ingresa tu nombre completo',
-                        confirmButtonColor: '#e9820d'
-                    });
-                    return;
-                }
-                if (!form.email.value.trim()) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Correo requerido',
-                        text: 'Por favor ingresa tu correo electrónico',
-                        confirmButtonColor: '#e9820d'
-                    });
-                    return;
-                }
-                if (!form.cellphone.value.trim()) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Teléfono requerido',
-                        text: 'Por favor ingresa tu número de teléfono para coordinar la entrega',
-                        confirmButtonColor: '#e9820d'
-                    });
-                    return;
-                }
-                if (!form.address.value.trim()) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Dirección requerida',
-                        text: 'Por favor ingresa tu dirección completa (calle, número, colonia)',
-                        confirmButtonColor: '#e9820d'
-                    });
-                    return;
-                }
-                if (!form.city.value.trim()) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Ciudad requerida',
-                        text: 'Por favor ingresa tu ciudad',
-                        confirmButtonColor: '#e9820d'
-                    });
-                    return;
-                }
-                if (!form.state.value.trim()) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Estado requerido',
-                        text: 'Por favor ingresa tu estado o municipio',
-                        confirmButtonColor: '#e9820d'
-                    });
-                    return;
-                }
-                if (!form.zipcode.value.trim()) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Código postal requerido',
-                        text: 'Por favor ingresa tu código postal',
-                        confirmButtonColor: '#e9820d'
-                    });
-                    return;
-                }
-                
-                // Validación del código postal (5 dígitos)
-                if (!/^\d{5}$/.test(form.zipcode.value.trim())) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Código postal inválido',
-                        text: 'El código postal debe tener exactamente 5 dígitos numéricos',
-                        confirmButtonColor: '#e9820d'
-                    });
-                    return;
-                }
-            }
-
-            console.log('Enviando Shipping Info:', shippingInfo);
-            console.log('Enviando User Info:', userFormData);
-
-            var url = '/process_order/';
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken
-                },
-                body: JSON.stringify({'form': userFormData, 'shipping': shippingInfo})
-            })
-            .then((response) => response.json())
-            .then((data) => {
-                console.log('Orden procesada exitosamente:', data);
-                
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Transacción Completada!',
-                    html: `
-                        <div style="text-align: center;">
-                            <i class="bi bi-check-circle-fill" style="font-size: 3rem; color: #28a745;"></i>
-                            <h4 style="margin: 1rem 0; color: #2c3e50;">¡Pedido realizado con éxito!</h4>
-                            <p style="color: #6c757d;">Tu pedido ha sido procesado correctamente.</p>
-                            <p style="color: #6c757d;">Recibirás un correo de confirmación en breve.</p>
-                        </div>
-                    `,
-                    confirmButtonText: 'Ver mis pedidos',
-                    confirmButtonColor: '#e9820d',
-                    allowOutsideClick: false,
-                    allowEscapeKey: false,
-                    showConfirmButton: true,
-                    timer: false
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        var cart = {};
-                        document.cookie = 'cart=' + JSON.stringify(cart) + ';domain=;path=/';
-                        window.location.href = orderHistoryUrl;
-                    }
-                });
-            })
-            .catch((error) => {
-                console.error('Error al procesar la orden:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error en el procesamiento',
-                    html: `
-                        <div style="text-align: center;">
-                            <i class="bi bi-exclamation-triangle-fill" style="font-size: 3rem; color: #dc3545;"></i>
-                            <h4 style="margin: 1rem 0; color: #2c3e50;">Hubo un problema</h4>
-                            <p style="color: #6c757d;">No se pudo procesar tu pedido en este momento.</p>
-                            <p style="color: #6c757d;">Por favor, inténtalo nuevamente o contacta soporte.</p>
-                        </div>
-                    `,
-                    confirmButtonText: 'Intentar nuevamente',
-                    confirmButtonColor: '#e9820d',
-                    showCancelButton: true,
-                    cancelButtonText: 'Contactar soporte',
-                    cancelButtonColor: '#6c757d'
-                });
-            });
-        }
-
-        function getCookie(name) {
-            var cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                var cookies = document.cookie.split(';');
-                for (var i = 0; i < cookies.length; i++) {
-                    var cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-    });
-</script>
-
-{% endblock content %}
-
+{% block extra_css %}
 <style>
-    /* Estilos para mejorar el formulario de checkout */
-    .form-label {
-        color: #2c3e50;
-        font-weight: 600;
+    /* Checkout Styles */
+    .checkout-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        color: white;
+        padding: 3rem 2rem;
+        text-align: center;
+        margin-bottom: 2rem;
     }
-    
-    .form-control:focus {
-        border-color: #e9820d;
-        box-shadow: 0 0 0 0.2rem rgba(233, 130, 13, 0.25);
+
+    .checkout-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
     }
-    
-    .form-text {
-        color: #6c757d;
-        font-size: 0.875em;
+
+    .checkout-header p {
+        font-size: 1.2rem;
+        opacity: 0.9;
     }
-    
-    .card-header {
-        border: none !important;
+
+    /* Progress Indicator */
+    .progress-indicator {
+        max-width: 800px;
+        margin: 0 auto 3rem auto;
+        padding: 0 2rem;
     }
-    
-    .box-element {
-        padding: 1.5rem;
-        border: 1px solid #dee2e6;
-        border-radius: 0.5rem;
-        background-color: #fff;
-        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+
+    .progress-steps {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+        margin-bottom: 2rem;
     }
-    
-    /* Iconos en labels */
-    .form-label i {
-        color: #e9820d;
-        margin-right: 0.25rem;
+
+    .progress-steps::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--light-bg);
+        z-index: 1;
     }
-    
-    /* Estilos para sección de pago */
-    #payment-info .card {
-        border: 1px solid #dee2e6;
+
+    .progress-steps::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        width: 50%;
+        height: 3px;
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        z-index: 2;
+        transition: width 0.5s ease;
+    }
+
+    .progress-steps.step-2::after {
+        width: 100%;
+    }
+
+    .progress-step {
+        background: white;
+        border: 3px solid var(--light-bg);
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        z-index: 3;
         transition: all 0.3s ease;
     }
-    
-    #payment-info .card:hover {
-        border-color: #e9820d;
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+
+    .progress-step.active {
+        border-color: var(--primary-color);
+        background: var(--primary-color);
+        color: white;
+        transform: scale(1.1);
     }
-    
-    /* Validación visual */
-    .form-control:invalid {
-        border-color: #dc3545;
+
+    .progress-step.completed {
+        border-color: #28a745;
+        background: #28a745;
+        color: white;
     }
-    
+
+    .step-label {
+        position: absolute;
+        top: 70px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        white-space: nowrap;
+    }
+
+    /* Main Layout */
+    .checkout-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 2rem;
+    }
+
+    .checkout-layout {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 3rem;
+        margin-bottom: 3rem;
+    }
+
+    /* Form Styles */
+    .checkout-form {
+        background: white;
+        border-radius: 15px;
+        padding: 2.5rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        height: fit-content;
+    }
+
+    .form-section {
+        margin-bottom: 3rem;
+    }
+
+    .form-section:last-child {
+        margin-bottom: 0;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--light-bg);
+    }
+
+    .section-icon {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+    }
+
+    .section-title h3 {
+        margin: 0;
+        color: var(--text-dark);
+        font-size: 1.5rem;
+    }
+
+    .section-title p {
+        margin: 0;
+        color: var(--text-light);
+        font-size: 0.9rem;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .form-grid.single {
+        grid-template-columns: 1fr;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        font-size: 0.95rem;
+    }
+
+    .form-label i {
+        color: var(--primary-color);
+        margin-right: 0.5rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 1rem;
+        border: 2px solid #e1e8ed;
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: white;
+    }
+
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(255, 140, 0, 0.1);
+        outline: none;
+    }
+
     .form-control:valid {
         border-color: #28a745;
     }
-    
-    /* Responsive improvements */
-    @media (max-width: 768px) {
-        .box-element {
-            padding: 1rem;
+
+    .form-control:invalid:not(:placeholder-shown) {
+        border-color: #dc3545;
+    }
+
+    .form-help {
+        font-size: 0.85rem;
+        color: var(--text-light);
+        margin-top: 0.3rem;
+    }
+
+    .required {
+        color: #dc3545;
+    }
+
+    /* Order Summary */
+    .order-summary {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        height: fit-content;
+        position: sticky;
+        top: 100px;
+    }
+
+    .summary-header {
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--light-bg);
+    }
+
+    .summary-header h3 {
+        color: var(--text-dark);
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .order-items {
+        margin-bottom: 2rem;
+    }
+
+    .order-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: var(--light-bg);
+        border-radius: 10px;
+        margin-bottom: 1rem;
+    }
+
+    .item-image {
+        width: 60px;
+        height: 60px;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .item-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .item-details {
+        flex: 1;
+    }
+
+    .item-name {
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 0.3rem;
+        font-size: 0.95rem;
+    }
+
+    .item-info {
+        font-size: 0.85rem;
+        color: var(--text-light);
+    }
+
+    .item-price {
+        font-weight: 700;
+        color: var(--primary-color);
+        font-size: 1.1rem;
+    }
+
+    .summary-totals {
+        border-top: 2px solid var(--light-bg);
+        padding-top: 1.5rem;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding: 0.5rem 0;
+    }
+
+    .summary-row:last-child {
+        border-top: 2px solid var(--light-bg);
+        padding-top: 1rem;
+        margin-top: 1rem;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--text-dark);
+    }
+
+    .summary-label {
+        color: var(--text-dark);
+        font-weight: 500;
+    }
+
+    .summary-value {
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+
+    /* Action Buttons */
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .btn-primary {
+        flex: 1;
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 10px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(255, 140, 0, 0.3);
+    }
+
+    .btn-primary:disabled {
+        background: #dfe6e9;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .btn-secondary {
+        background: white;
+        color: var(--text-dark);
+        border: 2px solid #e1e8ed;
+        padding: 1rem 2rem;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .btn-secondary:hover {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+        transform: translateY(-2px);
+    }
+
+    /* Payment Methods */
+    .payment-methods {
+        display: none;
+        margin-top: 2rem;
+    }
+
+    .payment-methods.show {
+        display: block;
+    }
+
+    .payment-option {
+        border: 2px solid #e1e8ed;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: white;
+    }
+
+    .payment-option:hover {
+        border-color: var(--primary-color);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .payment-option.selected {
+        border-color: var(--primary-color);
+        background: rgba(255, 140, 0, 0.05);
+    }
+
+    .payment-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .payment-icon {
+        font-size: 2rem;
+    }
+
+    .payment-title {
+        font-weight: 600;
+        color: var(--text-dark);
+        margin: 0;
+    }
+
+    .payment-subtitle {
+        color: var(--text-light);
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    .payment-description {
+        color: var(--text-light);
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    /* Security Badge */
+    .security-badge {
+        background: var(--light-bg);
+        padding: 1.5rem;
+        border-radius: 10px;
+        text-align: center;
+        margin-top: 2rem;
+    }
+
+    .security-badge i {
+        font-size: 2rem;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 968px) {
+        .checkout-layout {
+            grid-template-columns: 1fr;
+            gap: 2rem;
         }
-        
-        .card-header h5 {
-            font-size: 1.1rem;
+
+        .order-summary {
+            position: relative;
+            top: 0;
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .checkout-header h1 {
+            font-size: 2rem;
+        }
+
+        .progress-step {
+            width: 50px;
+            height: 50px;
+        }
+
+        .step-label {
+            font-size: 0.8rem;
         }
     }
+
+    @media (max-width: 576px) {
+        .checkout-container {
+            padding: 0 1rem;
+        }
+
+        .checkout-form,
+        .order-summary {
+            padding: 1.5rem;
+        }
+
+        .section-header {
+            flex-direction: column;
+            text-align: center;
+            gap: 0.5rem;
+        }
+    }
+
+    .hidden {
+        display: none !important;
+    }
 </style>
+{% endblock %}
+
+{% block content %}
+<!-- Checkout Header -->
+<div class="checkout-header">
+    <h1>
+        <i class="fas fa-credit-card"></i>
+        Finalizar Compra
+    </h1>
+    <p>Completa tu información para procesar tu pedido</p>
+</div>
+
+<!-- Progress Indicator -->
+<div class="progress-indicator">
+    <div class="progress-steps" id="progress-steps">
+        <div class="progress-step active" id="step-1">
+            <i class="fas fa-user"></i>
+            <div class="step-label">Información</div>
+        </div>
+        <div class="progress-step" id="step-2">
+            <i class="fas fa-credit-card"></i>
+            <div class="step-label">Pago</div>
+        </div>
+    </div>
+</div>
+
+<div class="checkout-container">
+    <div class="checkout-layout">
+        <!-- Checkout Form -->
+        <div class="checkout-form">
+            <!-- Customer Information Form -->
+            <div id="information-step">
+                {% csrf_token %}
+                <form id="form">
+                    <!-- Personal Information -->
+                    <div class="form-section">
+                        <div class="section-header">
+                            <div class="section-icon">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="section-title">
+                                <h3>Información Personal</h3>
+                                <p>Datos básicos para tu pedido</p>
+                            </div>
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="name" class="form-label">
+                                    <i class="fas fa-user"></i>
+                                    Nombre Completo <span class="required">*</span>
+                                </label>
+                                <input required class="form-control" type="text" id="name" name="name" 
+                                       placeholder="Ej: Juan Pérez García"
+                                       value="{% if customer %}{{ customer.name }}{% endif %}">
+                                <div class="form-help">Nombre como aparece en tu identificación</div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="email" class="form-label">
+                                    <i class="fas fa-envelope"></i>
+                                    Correo Electrónico <span class="required">*</span>
+                                </label>
+                                <input required class="form-control" type="email" id="email" name="email" 
+                                       placeholder="correo@ejemplo.com"
+                                       value="{% if customer %}{{ customer.email }}{% endif %}">
+                                <div class="form-help">Para notificaciones del pedido</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Shipping Information -->
+                    <div class="form-section" id="shipping-info">
+                        <div class="section-header">
+                            <div class="section-icon">
+                                <i class="fas fa-truck"></i>
+                            </div>
+                            <div class="section-title">
+                                <h3>Información de Envío</h3>
+                                <p>Dirección donde recibirás tu pedido</p>
+                            </div>
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="cellphone" class="form-label">
+                                    <i class="fas fa-phone"></i>
+                                    Teléfono de Contacto <span class="required">*</span>
+                                </label>
+                                <input required class="form-control" type="tel" id="cellphone" name="cellphone" 
+                                       placeholder="Ej: 981 123 4567"
+                                       value="{% if customer %}{{ customer.phone_number }}{% endif %}">
+                                <div class="form-help">Para coordinar la entrega</div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="zipcode" class="form-label">
+                                    <i class="fas fa-map-pin"></i>
+                                    Código Postal <span class="required">*</span>
+                                </label>
+                                <input required class="form-control" type="text" id="zipcode" name="zipcode" 
+                                       placeholder="Ej: 24000"
+                                       pattern="[0-9]{5}"
+                                       maxlength="5"
+                                       value="{% if customer %}{{ customer.zip_code }}{% endif %}">
+                                <div class="form-help">5 dígitos numéricos</div>
+                            </div>
+                        </div>
+
+                        <div class="form-grid single">
+                            <div class="form-group">
+                                <label for="address" class="form-label">
+                                    <i class="fas fa-home"></i>
+                                    Dirección Completa <span class="required">*</span>
+                                </label>
+                                <input required class="form-control" type="text" id="address" name="address" 
+                                       placeholder="Ej: Calle 5 de Mayo #123, Colonia Centro"
+                                       value="{% if customer %}{{ customer.address }}{% endif %}">
+                                <div class="form-help">Calle, número, colonia o fraccionamiento</div>
+                            </div>
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="city" class="form-label">
+                                    <i class="fas fa-city"></i>
+                                    Ciudad <span class="required">*</span>
+                                </label>
+                                <input required class="form-control" type="text" id="city" name="city" 
+                                       placeholder="Ej: Campeche"
+                                       value="{% if customer %}{{ customer.municipality }}{% endif %}">
+                                <div class="form-help">Ciudad donde vives</div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="state" class="form-label">
+                                    <i class="fas fa-map"></i>
+                                    Estado/Municipio <span class="required">*</span>
+                                </label>
+                                <input required class="form-control" type="text" id="state" name="state" 
+                                       placeholder="Ej: Campeche"
+                                       value="{% if customer %}{{ customer.state }}{% endif %}">
+                                <div class="form-help">Estado o municipio</div>
+                            </div>
+                        </div>
+
+                        <div class="form-grid single">
+                            <div class="form-group">
+                                <label for="referencias" class="form-label">
+                                    <i class="fas fa-map-marked-alt"></i>
+                                    Referencias de Ubicación (Opcional)
+                                </label>
+                                <textarea class="form-control" id="referencias" name="referencias" rows="3"
+                                          placeholder="Ej: Entre las calles Hidalgo y Morelos, casa de color azul, portón café"></textarea>
+                                <div class="form-help">Ayúdanos a encontrar tu dirección más fácilmente</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <a href="{% url 'cart' %}" class="btn-secondary">
+                            <i class="fas fa-arrow-left"></i>
+                            Volver al carrito
+                        </a>
+                        <button id="form-button" class="btn-primary" type="submit">
+                            <i class="fas fa-arrow-right"></i>
+                            Continuar al pago
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Payment Step -->
+            <div id="payment-step" class="hidden">
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-credit-card"></i>
+                        </div>
+                        <div class="section-title">
+                            <h3>Método de Pago</h3>
+                            <p>Elige tu forma de pago preferida</p>
+                        </div>
+                    </div>
+
+                    <div class="payment-methods show">
+                        <!-- Transferencia Bancaria -->
+                        <div class="payment-option selected" id="bank-transfer">
+                            <div class="payment-header">
+                                <i class="fas fa-university payment-icon" style="color: #2c3e50;"></i>
+                                <div>
+                                    <h4 class="payment-title">Transferencia Bancaria</h4>
+                                    <p class="payment-subtitle">Transferencia o depósito bancario</p>
+                                </div>
+                            </div>
+                            <p class="payment-description">
+                                Realiza tu pago mediante transferencia bancaria. Te enviaremos los datos 
+                                bancarios por correo electrónico para completar el pago.
+                            </p>
+                        </div>
+
+                        <!-- Tarjetas en Línea -->
+                        <div class="payment-option" id="card-payment">
+                            <div class="payment-header">
+                                <i class="fas fa-credit-card payment-icon" style="color: #e74c3c;"></i>
+                                <div>
+                                    <h4 class="payment-title">Tarjetas en Línea</h4>
+                                    <p class="payment-subtitle">Visa, MasterCard, American Express</p>
+                                </div>
+                            </div>
+                            <p class="payment-description">
+                                Pago seguro con tarjeta de crédito o débito. Procesamiento inmediato 
+                                y confirmación instantánea de tu pedido.
+                            </p>
+                        </div>
+
+                        <!-- Pago en Línea -->
+                        <div class="payment-option" id="online-payment">
+                            <div class="payment-header">
+                                <i class="fas fa-mobile-alt payment-icon" style="color: #3498db;"></i>
+                                <div>
+                                    <h4 class="payment-title">Pago en Línea</h4>
+                                    <p class="payment-subtitle">SPEI, Oxxo Pay, transferencias móviles</p>
+                                </div>
+                            </div>
+                            <p class="payment-description">
+                                Paga con tu aplicación bancaria favorita, SPEI inmediato, o en tiendas 
+                                de conveniencia como Oxxo.
+                            </p>
+                        </div>
+
+                        <!-- Depósito Bancario -->
+                        <div class="payment-option" id="bank-deposit">
+                            <div class="payment-header">
+                                <i class="fas fa-money-check-alt payment-icon" style="color: #27ae60;"></i>
+                                <div>
+                                    <h4 class="payment-title">Depósito Bancario</h4>
+                                    <p class="payment-subtitle">Depósito en sucursal bancaria</p>
+                                </div>
+                            </div>
+                            <p class="payment-description">
+                                Realiza tu depósito directamente en cualquier sucursal bancaria. 
+                                Recibirás las instrucciones detalladas por correo.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn-secondary" onclick="goBackToInfo()">
+                            <i class="fas fa-arrow-left"></i>
+                            Volver a información
+                        </button>
+                        <button id="make-payment" class="btn-primary">
+                            <i class="fas fa-university"></i>
+                            Confirmar Transferencia
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Security Badge -->
+                <div class="security-badge">
+                    <i class="fas fa-shield-alt"></i>
+                    <div style="font-weight: 600; margin-bottom: 0.5rem;">Compra 100% Segura</div>
+                    <div style="font-size: 0.9rem; color: var(--text-light);">
+                        Tus datos están protegidos con encriptación SSL
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="order-summary">
+            <div class="summary-header">
+                <h3>
+                    <i class="fas fa-receipt"></i>
+                    Resumen del Pedido
+                </h3>
+                <p style="color: var(--text-light); margin: 0;">
+                    {{ order.get_cart_items }} producto{{ order.get_cart_items|pluralize }}
+                </p>
+            </div>
+
+            <!-- Order Items -->
+            <div class="order-items">
+                {% for item in items %}
+                <div class="order-item">
+                    <div class="item-image">
+                        {% if item.product.imageURL %}
+                        <img src="{{ item.product.imageURL }}" alt="{{ item.product.name }}">
+                        {% else %}
+                        <i class="fas fa-cog" style="color: var(--text-light); font-size: 1.5rem;"></i>
+                        {% endif %}
+                    </div>
+                    <div class="item-details">
+                        <div class="item-name">{{ item.product.name }}</div>
+                        <div class="item-info">
+                            Cantidad: {{ item.quantity }} 
+                            {% if item.product.brand %} • {{ item.product.brand }}{% endif %}
+                        </div>
+                    </div>
+                    <div class="item-price">
+                        {% if item.product.offer %}
+                        ${{ item.product.offer_price|floatformat:2 }}
+                        {% else %}
+                        ${{ item.product.price|floatformat:2 }}
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Summary Totals -->
+            <div class="summary-totals">
+                <div class="summary-row">
+                    <span class="summary-label">Subtotal:</span>
+                    <span class="summary-value">${{ order.get_cart_total|floatformat:2 }}</span>
+                </div>
+
+                <div class="summary-row">
+                    <span class="summary-label">Envío:</span>
+                    <span class="summary-value">Gratis</span>
+                </div>
+
+                <div class="summary-row">
+                    <span class="summary-label">IVA (16%):</span>
+                    <span class="summary-value">${{ order.get_cart_iva|floatformat:2 }}</span>
+                </div>
+
+                <div class="summary-row">
+                    <span class="summary-label">Total:</span>
+                    <span class="summary-value">${{ order.get_cart_total_with_iva|floatformat:2 }}</span>
+                </div>
+            </div>
+
+            <!-- Shipping Badge -->
+            <div style="background: rgba(40, 167, 69, 0.1); border-radius: 8px; padding: 1rem; text-align: center; margin-top: 1.5rem;">
+                <i class="fas fa-truck" style="color: #28a745; font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
+                <div style="font-weight: 600; color: #28a745;">Envío Gratuito</div>
+                <div style="font-size: 0.9rem; color: var(--text-light);">
+                    En toda la República Mexicana
+                </div>
+            </div>
+        </div>
+    </div>
+</div>{% endblock %}
+
+{% block extra_js %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Variables
+    const shipping = "{{ order.shipping|escapejs }}";
+    const total = "{{ order.get_cart_total_with_iva|floatformat:2 }}";
+    const user = "{{ request.user|escapejs }}";
+    const orderHistoryUrl = "{% url 'order_history' %}";
+    const csrftoken = getCookie('csrftoken');
+    
+    // Elements
+    const form = document.getElementById('form');
+    const progressSteps = document.getElementById('progress-steps');
+    const informationStep = document.getElementById('information-step');
+    const paymentStep = document.getElementById('payment-step');
+    const step1 = document.getElementById('step-1');
+    const step2 = document.getElementById('step-2');
+
+    // Step Management
+    function goToPaymentStep() {
+        // Update progress
+        step1.classList.remove('active');
+        step1.classList.add('completed');
+        step1.innerHTML = '<i class="fas fa-check"></i>';
+        
+        step2.classList.add('active');
+        progressSteps.classList.add('step-2');
+        
+        // Show payment step
+        informationStep.classList.add('hidden');
+        paymentStep.classList.remove('hidden');
+        
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    window.goBackToInfo = function() {
+        // Update progress
+        step1.classList.add('active');
+        step1.classList.remove('completed');
+        step1.innerHTML = '<i class="fas fa-user"></i>';
+        
+        step2.classList.remove('active');
+        progressSteps.classList.remove('step-2');
+        
+        // Show information step
+        paymentStep.classList.add('hidden');
+        informationStep.classList.remove('hidden');
+        
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // Form Validation and Submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (validateForm()) {
+            // Add loading state
+            const submitBtn = document.getElementById('form-button');
+            const originalContent = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validando...';
+            submitBtn.disabled = true;
+            
+            setTimeout(() => {
+                submitBtn.innerHTML = originalContent;
+                submitBtn.disabled = false;
+                goToPaymentStep();
+            }, 1000);
+        }
+    });
+
+    // Form Validation
+    function validateForm() {
+        const requiredFields = ['name', 'email', 'cellphone', 'address', 'city', 'state', 'zipcode'];
+        let isValid = true;
+        
+        requiredFields.forEach(fieldName => {
+            const field = form[fieldName];
+            const value = field.value.trim();
+            
+            if (!value) {
+                showFieldError(field, `Por favor completa este campo`);
+                isValid = false;
+            } else {
+                clearFieldError(field);
+                
+                // Specific validations
+                if (fieldName === 'email' && !isValidEmail(value)) {
+                    showFieldError(field, 'Por favor ingresa un correo válido');
+                    isValid = false;
+                }
+                
+                if (fieldName === 'zipcode' && !/^\d{5}$/.test(value)) {
+                    showFieldError(field, 'El código postal debe tener 5 dígitos');
+                    isValid = false;
+                }
+            }
+        });
+        
+        return isValid;
+    }
+
+    function showFieldError(field, message) {
+        field.style.borderColor = '#dc3545';
+        
+        // Remove existing error
+        const existingError = field.parentNode.querySelector('.error-message');
+        if (existingError) {
+            existingError.remove();
+        }
+        
+        // Add error message
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+        errorDiv.style.color = '#dc3545';
+        errorDiv.style.fontSize = '0.85rem';
+        errorDiv.style.marginTop = '0.3rem';
+        errorDiv.textContent = message;
+        
+        field.parentNode.appendChild(errorDiv);
+    }
+
+    function clearFieldError(field) {
+        field.style.borderColor = '#28a745';
+        const errorMessage = field.parentNode.querySelector('.error-message');
+        if (errorMessage) {
+            errorMessage.remove();
+        }
+    }
+
+    function isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    // Payment Method Selection
+    const paymentOptions = document.querySelectorAll('.payment-option');
+    let selectedPaymentMethod = 'bank-transfer';
+
+    paymentOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            // Remove selected class from all options
+            paymentOptions.forEach(opt => opt.classList.remove('selected'));
+            
+            // Add selected class to clicked option
+            this.classList.add('selected');
+            
+            // Update selected method based on ID
+            selectedPaymentMethod = this.id;
+            
+            // Update button text based on payment method
+            updatePaymentButton();
+        });
+    });
+
+    function updatePaymentButton() {
+        const makePaymentBtn = document.getElementById('make-payment');
+        let buttonText = '';
+        let buttonIcon = '';
+        
+        switch(selectedPaymentMethod) {
+            case 'bank-transfer':
+                buttonIcon = 'fas fa-university';
+                buttonText = 'Confirmar Transferencia';
+                break;
+            case 'card-payment':
+                buttonIcon = 'fas fa-credit-card';
+                buttonText = 'Pagar con Tarjeta';
+                break;
+            case 'online-payment':
+                buttonIcon = 'fas fa-mobile-alt';
+                buttonText = 'Pago en Línea';
+                break;
+            case 'bank-deposit':
+                buttonIcon = 'fas fa-money-check-alt';
+                buttonText = 'Confirmar Depósito';
+                break;
+            default:
+                buttonIcon = 'fas fa-check';
+                buttonText = 'Finalizar Pedido';
+        }
+        
+        makePaymentBtn.innerHTML = `<i class="${buttonIcon}"></i> ${buttonText}`;
+    }
+
+    // Initialize payment button text
+    updatePaymentButton();
+
+    // Simulated Payment Processing
+    document.getElementById('make-payment').addEventListener('click', function() {
+        processOrder(selectedPaymentMethod);
+    });
+
+    // Order Processing
+    function processOrder(paymentMethod = 'bank-transfer') {
+        console.log('Procesando orden con método:', paymentMethod);
+        
+        // Show loading state
+        const makePaymentBtn = document.getElementById('make-payment');
+        const originalContent = makePaymentBtn.innerHTML;
+        makePaymentBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+        makePaymentBtn.disabled = true;
+
+        const userFormData = {
+            'name': form.name.value,
+            'email': form.email.value,
+            'total': total,
+            'payment_method': paymentMethod
+        };
+
+        const shippingInfo = {
+            'cellphone': form.cellphone.value,
+            'address': form.address.value,
+            'city': form.city.value,
+            'state': form.state.value,
+            'zipcode': form.zipcode.value,
+            'referencias': form.referencias ? form.referencias.value : ''
+        };
+
+        const url = '/process_order/';
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({'form': userFormData, 'shipping': shippingInfo})
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            console.log('Orden procesada exitosamente:', data);
+            
+            // Get payment method display info
+            const paymentInfo = getPaymentDisplayInfo(paymentMethod);
+            
+            // Success modal (using SweetAlert2 if available, otherwise native alert)
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Pedido Completado!',
+                    html: `
+                        <div style="text-align: center; padding: 1.5rem;">
+                            <i class="fas fa-check-circle" style="font-size: 4rem; color: #28a745; margin-bottom: 1.5rem;"></i>
+                            <h4 style="margin-bottom: 1rem; color: var(--text-dark);">¡Tu pedido ha sido procesado exitosamente!</h4>
+                            
+                            <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin: 1rem 0; border-left: 4px solid #28a745;">
+                                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+                                    <i class="${paymentInfo.icon}" style="font-size: 1.5rem; color: ${paymentInfo.color}; margin-right: 0.5rem;"></i>
+                                    <strong>${paymentInfo.title}</strong>
+                                </div>
+                                <p style="margin: 0.5rem 0; color: #495057;">${paymentInfo.message}</p>
+                            </div>
+                            
+                            <div style="background: #e3f2fd; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+                                <h6 style="color: #1976d2; margin-bottom: 0.5rem;">
+                                    <i class="fas fa-tracking" style="margin-right: 0.5rem;"></i>
+                                    Seguimiento de tu Pedido
+                                </h6>
+                                <p style="margin: 0; color: #424242; font-size: 0.9rem;">
+                                    Podrás rastrear el estado de tu compra en la sección "Mis Pedidos". 
+                                    Recibirás notificaciones por correo en cada etapa del proceso.
+                                </p>
+                            </div>
+                            
+                            <p style="color: var(--text-light); margin-top: 1rem;">
+                                <i class="fas fa-heart" style="color: #e74c3c; margin-right: 0.5rem;"></i>
+                                ¡Gracias por confiar en ALM Refaccionaria!
+                            </p>
+                        </div>
+                    `,
+                    confirmButtonText: '<i class="fas fa-history"></i> Ver Mis Pedidos',
+                    showCancelButton: true,
+                    cancelButtonText: '<i class="fas fa-shopping-cart"></i> Seguir Comprando',
+                    confirmButtonColor: '#007bff',
+                    cancelButtonColor: '#28a745',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    customClass: {
+                        popup: 'animated-popup',
+                        confirmButton: 'btn-confirm-custom',
+                        cancelButton: 'btn-cancel-custom'
+                    }
+                }).then((result) => {
+                    clearCart();
+                    if (result.isConfirmed) {
+                        window.location.href = orderHistoryUrl;
+                    } else {
+                        window.location.href = '/';
+                    }
+                });
+            } else {
+                alert(`¡Pedido completado exitosamente con ${paymentInfo.title}! Serás redirigido a tu historial de pedidos.`);
+                clearCart();
+                window.location.href = orderHistoryUrl;
+            }
+        })
+        .catch((error) => {
+            console.error('Error al procesar la orden:', error);
+            
+            // Reset button
+            makePaymentBtn.innerHTML = originalContent;
+            makePaymentBtn.disabled = false;
+            
+            // Error handling
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error en el procesamiento',
+                    text: 'Hubo un problema al procesar tu pedido. Por favor, inténtalo nuevamente.',
+                    confirmButtonColor: 'var(--primary-color)'
+                });
+            } else {
+                alert('Error al procesar el pedido. Por favor intenta nuevamente.');
+            }
+        });
+    }
+
+    // Payment Display Information
+    function getPaymentDisplayInfo(paymentMethod) {
+        const paymentInfo = {
+            'bank-transfer': {
+                title: 'Transferencia Bancaria',
+                icon: 'fas fa-university',
+                color: '#2c3e50',
+                message: 'Recibirás los datos bancarios por correo electrónico. Una vez realizada la transferencia, tu pedido será procesado en 1-2 horas hábiles.'
+            },
+            'card-payment': {
+                title: 'Pago con Tarjeta',
+                icon: 'fas fa-credit-card',
+                color: '#e74c3c',  
+                message: 'Tu pago ha sido procesado exitosamente. La transacción aparecerá en tu estado de cuenta como "ALM Refaccionaria".'
+            },
+            'online-payment': {
+                title: 'Pago en Línea',
+                icon: 'fas fa-mobile-alt',
+                color: '#3498db',
+                message: 'Tu pago ha sido confirmado. Si elegiste pagar en Oxxo, recibirás el código de barras por correo electrónico.'
+            },
+            'bank-deposit': {
+                title: 'Depósito Bancario',
+                icon: 'fas fa-money-check-alt',
+                color: '#27ae60',
+                message: 'Recibirás las instrucciones para realizar el depósito por correo. Tu pedido será procesado al confirmar el depósito.'
+            }
+        };
+        
+        return paymentInfo[paymentMethod] || paymentInfo['bank-transfer'];
+    }
+
+    // Utility Functions
+    function clearCart() {
+        const cart = {};
+        document.cookie = 'cart=' + JSON.stringify(cart) + ';domain=;path=/';
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Real-time validation
+    const formInputs = form.querySelectorAll('input, textarea');
+    formInputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.value.trim()) {
+                clearFieldError(this);
+            }
+        });
+        
+        input.addEventListener('input', function() {
+            if (this.classList.contains('error')) {
+                clearFieldError(this);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

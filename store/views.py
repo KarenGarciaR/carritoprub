@@ -210,16 +210,26 @@ def order_history(request):
     cartItems = data['cartItems']
 
     if request.user.is_staff:
-        # Admin ve todas las órdenes completadas
-        orders = Order.objects.filter(complete=True).order_by('-date_ordered')
+        # Admin ve todo el historial de órdenes
+        order_histories = OrderHistory.objects.all().select_related('order', 'customer', 'user')
     else:
-        # Cliente solo ve sus órdenes completadas (pagadas)
-        orders = Order.objects.filter(
-            customer__user=request.user, 
-            complete=True
-        ).order_by('-date_ordered')
+        # Cliente solo ve su historial de órdenes
+        customer = None
+        if request.user.is_authenticated:
+            try:
+                customer = Customer.objects.get(user=request.user)
+            except Customer.DoesNotExist:
+                pass
+                
+        if customer:
+            order_histories = OrderHistory.objects.filter(customer=customer).select_related('order', 'customer')
+        else:
+            order_histories = OrderHistory.objects.none()
     
-    return render(request, 'store/order_history.html', {'orders': orders, 'cartItems': cartItems})
+    return render(request, 'store/order_history.html', {
+        'order_histories': order_histories, 
+        'cartItems': cartItems
+    })
 
 @login_required
 def add_product(request):
@@ -591,9 +601,10 @@ def processOrder(request):
         customer, order = guestOrder(request, data)
 
     total = float(data['form']['total'])
+    payment_method = data['form'].get('payment_method', 'bank-transfer')
     order.transaction_id = transaction_id
 
-    if total == order.get_cart_total:
+    if total == order.get_cart_total_with_iva:
         order.complete = True
     order.save()
 
@@ -621,7 +632,22 @@ def processOrder(request):
     except Exception as e:
         print(f"Error al guardar la dirección de envío: {e}")
 
-    return JsonResponse('Payment submitted..', safe=False)
+    # Crear historial de pedido para el cliente
+    from .models import OrderHistory
+    OrderHistory.objects.create(
+        customer=customer,
+        order=order,
+        status='pending',
+        payment_method=payment_method
+    )
+
+    return JsonResponse({
+        'status': 'success',
+        'message': 'Payment submitted successfully',
+        'payment_method': payment_method,
+        'order_id': order.id,
+        'transaction_id': transaction_id
+    }, safe=False)
 
 # Vista para editar productos del lado del administrador
 @login_required

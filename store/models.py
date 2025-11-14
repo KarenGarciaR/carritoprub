@@ -162,6 +162,14 @@ class Order(models.Model):
     @property
     def get_cart_total(self):
         return sum(item.get_total for item in self.orderitem_set.all())
+    
+    @property
+    def get_cart_iva(self):
+        return self.get_cart_total * 0.16
+    
+    @property
+    def get_cart_total_with_iva(self):
+        return self.get_cart_total * 1.16
 
 class OrderItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
@@ -181,11 +189,34 @@ class OrderItem(models.Model):
 
 
 class OrderHistory(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    STATUS_CHOICES = [
+        ('pending', 'Pendiente'),
+        ('processing', 'Procesando'),
+        ('shipped', 'Enviado'),
+        ('delivered', 'Entregado'),
+        ('cancelled', 'Cancelado'),
+    ]
+    
+    PAYMENT_METHOD_CHOICES = [
+        ('bank-transfer', 'Transferencia Bancaria'),
+        ('card-payment', 'Pago con Tarjeta'),
+        ('online-payment', 'Pago en Línea'),
+        ('bank-deposit', 'Depósito Bancario'),
+    ]
+    
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='bank-transfer')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Historial de {self.user.username}"
+        return f"Pedido #{self.order.id} - {self.get_status_display()}"
+    
+    class Meta:
+        ordering = ['-created_at']
 
 class ShippingAddress(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True)

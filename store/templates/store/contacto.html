@@ -151,9 +151,86 @@
         box-shadow: 0 10px 30px rgba(255, 140, 0, 0.3);
     }
 
+    /* Values/Branches Section */
+    .values-section {
+        background: var(--light-bg);
+        padding: 5rem 2rem;
+    }
+
+    .section-title {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .section-title h2 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 1rem;
+    }
+
+    .underline {
+        width: 100px;
+        height: 4px;
+        background: var(--primary-color);
+        margin: 0 auto;
+    }
+
+    .values-grid {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+
+    .value-card {
+        background: white;
+        padding: 2.5rem;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+    }
+
+    .value-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 40px rgba(255, 140, 0, 0.2);
+    }
+
+    .value-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        font-size: 2rem;
+        color: white;
+    }
+
+    .value-card h3 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        color: var(--text-dark);
+    }
+
+    .value-card p {
+        color: var(--text-light);
+        line-height: 1.6;
+        text-align: left;
+    }
+
+    .value-card a {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
     /* Map Section */
     .map-section {
-        background: var(--light-bg);
         padding: 5rem 2rem;
     }
 
@@ -220,9 +297,20 @@
                     <i class="fas fa-phone"></i>
                 </div>
                 <div class="contact-info">
-                    <h3>Teléfono</h3>
+                    <h3>Teléfono Campeche</h3>
                     <p><a href="tel:+529811602276">+52 981 160 22 76</a></p>
-                    <p>Lunes a Viernes 8:00 AM - 6:00 PM</p>
+                    <p>Sucursal principal</p>
+                </div>
+            </div>
+
+            <div class="contact-card">
+                <div class="contact-icon">
+                    <i class="fas fa-phone"></i>
+                </div>
+                <div class="contact-info">
+                    <h3>Teléfono Escárcega</h3>
+                    <p><a href="tel:+529821169040">+52 982 116 90 40</a></p>
+                    <p>Atención especializada</p>
                 </div>
             </div>
 
@@ -231,21 +319,9 @@
                     <i class="fas fa-envelope"></i>
                 </div>
                 <div class="contact-info">
-                    <h3>Email</h3>
+                    <h3>Emails</h3>
                     <p><a href="mailto:ventascampeche@refaccionariaalmeyda.com.mx">ventascampeche@refaccionariaalmeyda.com.mx</a></p>
-                    <p>Respuesta en 24 horas</p>
-                </div>
-            </div>
-
-            <div class="contact-card">
-                <div class="contact-icon">
-                    <i class="fas fa-map-marker-alt"></i>
-                </div>
-                <div class="contact-info">
-                    <h3>Ubicación</h3>
-                    <p>Fracc. Bello Horizonte, Mza G, Lote 16</p>
-                    <p>Entre Niza y Capri. C.P. 24070</p>
-                    <p>Campeche, Campeche</p>
+                    <p><a href="mailto:ventasescarcega@refaccionariaalmeyda.com.mx">ventasescarcega@refaccionariaalmeyda.com.mx</a></p>
                 </div>
             </div>
 
@@ -255,8 +331,8 @@
                 </div>
                 <div class="contact-info">
                     <h3>WhatsApp</h3>
-                    <p><a href="https://wa.me/529811602276" target="_blank">+52 981 160 22 76</a></p>
-                    <p>Chat directo</p>
+                    <p><a href="https://wa.me/529811602276" target="_blank">Campeche: 981 160 22 76</a></p>
+                    <p><a href="https://wa.me/529821169040" target="_blank">Escárcega: 982 116 90 40</a></p>
                 </div>
             </div>
         </div>
@@ -264,6 +340,17 @@
         <!-- Contact Form -->
         <div class="contact-form">
             <h2>Envíanos un Mensaje</h2>
+            
+            <!-- Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert" style="margin-bottom: 1.5rem; padding: 1rem; border-radius: 10px; background: #d4edda; color: #155724; border: 1px solid #c3e6cb;">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="float: right; background: none; border: none; font-size: 1.2rem; color: #155724; cursor: pointer;">×</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
             <form method="post">
                 {% csrf_token %}
                 <div class="form-group">
@@ -294,13 +381,103 @@
     </div>
 </section>
 
-<!-- Map Section -->
+<!-- Branches Section -->
+<section class="values-section">
+    <div class="section-title">
+        <h2>Nuestras Sucursales</h2>
+        <div class="underline"></div>
+    </div>
+    
+    <div class="values-grid" style="max-width: 1200px;">
+        <div class="value-card">
+            <div class="value-icon">
+                <i class="fas fa-store"></i>
+            </div>
+            <h3>Sucursal Campeche</h3>
+            <p><strong>Dirección:</strong><br>
+            Fracc. Bello Horizonte, Mza G, Lote 16<br>
+            Entre Niza y Capri<br>
+            C.P. 24070, Campeche, Campeche</p>
+            <p><strong>Contacto:</strong><br>
+            📧 <a href="mailto:ventascampeche@refaccionariaalmeyda.com.mx">ventascampeche@refaccionariaalmeyda.com.mx</a><br>
+            📱 <a href="https://wa.me/529811602276">981 160 22 76</a></p>
+            <p><strong>Horarios:</strong><br>
+            Lunes a Viernes: 8:00 AM - 6:00 PM<br>
+            Sábados: 8:00 AM - 2:00 PM</p>
+        </div>
+
+        <div class="value-card">
+            <div class="value-icon">
+                <i class="fas fa-store"></i>
+            </div>
+            <h3>Sucursal Escárcega</h3>
+            <p><strong>Dirección:</strong><br>
+            Av. Justo Sierra, M 329<br>
+            Fte. de Elektra<br>
+            C.P. 24350, Escárcega, Campeche</p>
+            <p><strong>Contacto:</strong><br>
+            📧 <a href="mailto:ventasescarcega@refaccionariaalmeyda.com.mx">ventasescarcega@refaccionariaalmeyda.com.mx</a><br>
+            📱 <a href="https://wa.me/529821169040">982 116 90 40</a></p>
+            <p><strong>Servicios:</strong><br>
+            • Refacciones especializadas<br>
+            • Atención personalizada</p>
+        </div>
+
+        <div class="value-card">
+            <div class="value-icon">
+                <i class="fas fa-hammer"></i>
+            </div>
+            <h3>Sucursal Champotón</h3>
+            <p><strong>Estado:</strong><br>
+            <span style="color: var(--primary-color); font-weight: 600; font-size: 1.2rem;">¡PRÓXIMAMENTE!</span></p>
+            <p><strong>Ubicación:</strong><br>
+            Champotón, Campeche</p>
+            <p><strong>Información:</strong><br>
+            Muy pronto abriremos nuestras puertas<br>
+            para brindarles el mejor servicio</p>
+            <p><strong>Mientras tanto:</strong><br>
+            Contáctanos en nuestras otras sucursales<br>
+            para atender tus necesidades</p>
+        </div>
+    </div>
+</section>
+
+<!-- Maps Section -->
 <section class="map-section">
-    <div class="map-container">
-        <div class="map-placeholder">
-            <i class="fas fa-map-marked-alt"></i>
-            <p>Mapa - Ubicación de ALM Refaccionaria</p>
-            <p style="font-size: 0.9rem;">(Aquí puedes integrar Google Maps)</p>
+    <div class="section-title" style="margin-bottom: 3rem;">
+        <h2 style="color: white;">Ubicaciones en Mapa</h2>
+        <div class="underline"></div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem; max-width: 1200px; margin: 0 auto;">
+        <!-- Mapa Campeche -->
+        <div class="map-container" style="height: 350px;">
+            <iframe 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3781.234!2d-90.7406864!3d19.8403!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85f89c8c8c8c8c8c%3A0x1234567890abcdef!2sFracc.%20Bello%20Horizonte%2C%20Campeche!5e0!3m2!1ses!2smx!4v1699999999999!5m2!1ses!2smx"
+                style="border:0; width: 100%; height: 100%; border-radius: 15px;" 
+                allowfullscreen="" 
+                loading="lazy" 
+                referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
+            <div style="text-align: center; margin-top: 1rem; color: white;">
+                <h4>Sucursal Campeche</h4>
+                <p>Fracc. Bello Horizonte, Mza G, Lote 16</p>
+            </div>
+        </div>
+
+        <!-- Mapa Escárcega -->
+        <div class="map-container" style="height: 350px;">
+            <iframe 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3781.234!2d-90.7406864!3d18.6067!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85f89c8c8c8c8c8c%3A0x1234567890abcdef!2sAv.%20Justo%20Sierra%2C%20Esc%C3%A1rcega%2C%20Campeche!5e0!3m2!1ses!2smx!4v1699999999999!5m2!1ses!2smx"
+                style="border:0; width: 100%; height: 100%; border-radius: 15px;" 
+                allowfullscreen="" 
+                loading="lazy" 
+                referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
+            <div style="text-align: center; margin-top: 1rem; color: white;">
+                <h4>Sucursal Escárcega</h4>
+                <p>Av. Justo Sierra, M 329, Fte. de Elektra</p>
+            </div>
         </div>
     </div>
 </section>
