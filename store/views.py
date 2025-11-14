@@ -9,6 +9,10 @@ from .models import *
 from .utils import cookieCart, cartData, guestOrder
 from .forms import ProductEditForm, SignupForm, LoginForm
 from django.contrib.auth import logout as auth_logout
+import openai
+import os
+from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .forms import ProductForm, CustomerForm, OrderUpdateForm
@@ -796,3 +800,265 @@ def update_order_status(request, order_id):
         form = OrderUpdateForm(instance=order)
 
     return render(request, 'store/update_order.html', {'form': form, 'order': order, 'cartItems':cartItems})
+
+@csrf_exempt
+def chatbot_api(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            user_message = data.get('message', '')
+            
+            print(f"Chatbot recibió mensaje: {user_message}")  # Debug log
+            
+            if not user_message:
+                return JsonResponse({'error': 'No se proporcionó mensaje'}, status=400)
+            
+            # Verificar si existe la clave de OpenAI
+            api_key = os.getenv('OPENAI_API_KEY')
+            if not api_key:
+                print("No se encontró OPENAI_API_KEY en el .env")
+                return JsonResponse({
+                    'response': 'Hola! Soy el asistente de ALM Refaccionaria. Actualmente estoy en modo de prueba. ¿En qué puedo ayudarte con nuestros productos automotrices?',
+                    'success': True
+                })
+            
+            print(f"Usando OpenAI API Key: {api_key[:10]}...")  # Debug log (solo primeros caracteres)
+            
+            # Configurar cliente OpenAI
+            from openai import OpenAI
+            client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+            
+            # Crear el contexto del chatbot para ALM Refaccionaria
+            system_prompt = """
+            Eres un asistente virtual de ALM Refaccionaria, una tienda especializada en autopartes y refacciones automotrices.
+            
+            Tu función es ayudar a los clientes con:
+            - Información sobre productos y refacciones automotrices
+            - Consultas sobre pedidos, envíos y entregas
+            - Recomendaciones de productos según el tipo de vehículo
+            - Soporte general de la tienda
+            - Preguntas sobre garantías, devoluciones y políticas
+            - Información sobre métodos de pago disponibles
+            
+            Responde de manera amigable, profesional y útil. Usa un tono cercano pero profesional.
+            Si no sabes algo específico sobre un producto, recomienda que contacten al equipo de ventas.
+            Mantén las respuestas concisas pero informativas (máximo 3-4 líneas).
+            """
+            
+            # Llamada a la API de OpenAI (nueva sintaxis)
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_message}
+                ],
+                max_tokens=300,
+                temperature=0.7
+            )
+            
+            bot_response = response.choices[0].message.content.strip()
+            print(f"OpenAI respondió: {bot_response}")  # Debug log
+            
+            return JsonResponse({
+                'response': bot_response,
+                'success': True
+            })
+            
+        except Exception as e:
+            print(f"Error con OpenAI: {str(e)}")
+            # Usar sistema de respuestas automáticas como fallback
+            bot_response = get_automated_response(user_message)
+            return JsonResponse({
+                'response': bot_response,
+                'success': True
+            })
+    
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+def get_automated_response(user_message):
+    """Sistema de respuestas automáticas para cuando OpenAI no esté disponible"""
+    
+    message_lower = user_message.lower().strip()
+    
+    print(f"Analizando mensaje: '{message_lower}'")  # Debug
+    
+    # Respuestas para saludos
+    if any(word in message_lower for word in ['hola', 'buenos', 'buenas', 'hey', 'hi', 'hello', 'saludos']):
+        return "¡Hola! 👋 Bienvenido a ALM Refaccionaria. Soy tu asistente virtual y estoy aquí para ayudarte con información sobre autopartes, refacciones y todo lo relacionado con tu vehículo. ¿En qué puedo asistirte hoy?"
+    
+    # Respuestas sobre productos
+    elif any(word in message_lower for word in ['producto', 'productos', 'refaccion', 'refacciones', 'parte', 'partes', 'repuesto', 'repuestos', 'pieza', 'piezas', 'autopartes', 'que', 'qué', 'venden', 'tienen', 'manejan']):
+        return "🔧 En ALM Refaccionaria manejamos una amplia gama de autopartes y refacciones para diferentes marcas y modelos. Tenemos desde suspensiones, frenos, motor, transmisión hasta accesorios. ¿Qué tipo de refacción necesitas para tu vehículo?"
+    
+    # Respuestas sobre envíos
+    elif any(word in message_lower for word in ['envio', 'envío', 'entrega', 'shipping', 'delivery']):
+        return "📦 Ofrecemos envío gratuito en toda la república. El tiempo de entrega es de 3-5 días hábiles. Una vez que realices tu pedido, recibirás un número de seguimiento por correo electrónico para rastrear tu paquete."
+    
+    # Respuestas sobre pagos
+    elif any(word in message_lower for word in ['pago', 'pagar', 'precio', 'costo', 'tarjeta', 'transferencia']):
+        return "💳 Aceptamos múltiples métodos de pago: transferencia bancaria, tarjetas de crédito/débito, pago en línea (SPEI, Oxxo) y depósitos bancarios. Todos nuestros pagos son 100% seguros y procesados de forma inmediata."
+    
+    # Respuestas sobre garantías
+    elif any(word in message_lower for word in ['garantia', 'garantía', 'devolucion', 'devolución', 'calidad']):
+        return "🛡️ Todos nuestros productos cuentan con garantía de fábrica. Ofrecemos 30 días para devoluciones y cambios. Trabajamos solo con marcas reconocidas para garantizar la mejor calidad en autopartes."
+    
+    # Respuestas sobre pedidos
+    elif any(word in message_lower for word in ['pedido', 'orden', 'compra', 'historial', 'seguimiento']):
+        return "📋 Puedes revisar el estado de tu pedido en la sección 'Mis Pedidos' de tu cuenta. Ahí encontrarás el seguimiento completo, desde el procesamiento hasta la entrega. Si tienes alguna duda específica, proporciona tu número de orden."
+    
+    # Respuestas sobre contacto
+    elif any(word in message_lower for word in ['contacto', 'telefono', 'teléfono', 'correo', 'whatsapp']):
+        return "📞 Puedes contactarnos a través de nuestra página de contacto, donde encontrarás nuestro teléfono, WhatsApp y formulario de contacto. También puedes escribirnos directamente desde esta ventana de chat."
+    
+    # Respuestas sobre horarios
+    elif any(word in message_lower for word in ['horario', 'hora', 'abierto', 'cerrado', 'atencion', 'atención']):
+        return "🕒 Nuestro horario de atención es de lunes a viernes de 9:00 AM a 6:00 PM, y sábados de 9:00 AM a 2:00 PM. Este asistente virtual está disponible 24/7 para ayudarte con información básica."
+    
+    # Respuestas sobre ubicación
+    elif any(word in message_lower for word in ['ubicacion', 'ubicación', 'direccion', 'dirección', 'donde', 'dónde']):
+        return "📍 Puedes encontrar nuestra ubicación en la sección 'Contacto' de nuestro sitio web. Contamos con envíos a toda la república, así que no importa dónde te encuentres, podemos hacer llegar nuestros productos hasta tu puerta."
+    
+    # Respuestas sobre marcas/vehículos
+    elif any(word in message_lower for word in ['marca', 'modelo', 'vehiculo', 'vehículo', 'auto', 'carro', 'camioneta']):
+        return "🚗 Manejamos refacciones para las principales marcas automotrices: Ford, Chevrolet, Nissan, Toyota, Honda, Mazda, y muchas más. ¿Para qué marca y modelo de vehículo necesitas la refacción?"
+    
+    # Respuestas sobre ayuda general
+    elif any(word in message_lower for word in ['ayuda', 'help', 'asistencia', 'soporte', 'problema', 'puedo', 'hacer', 'preguntas', 'pregunta', 'duda', 'dudas', 'informacion', 'información']):
+        return "🤝 Estoy aquí para ayudarte con cualquier consulta sobre nuestros productos y servicios. Puedo darte información sobre autopartes, procesos de compra, envíos, garantías y más. ¿En qué específicamente necesitas ayuda?"
+    
+    # Respuestas de despedida
+    elif any(word in message_lower for word in ['gracias', 'bye', 'adios', 'adiós', 'hasta luego', 'chao']):
+        return "¡De nada! 😊 Fue un placer ayudarte. Si tienes más preguntas sobre nuestros productos o servicios, no dudes en escribirme. ¡Que tengas un excelente día y maneja con seguridad!"
+    
+    # Respuestas específicas adicionales
+    elif 'frenos' in message_lower or 'freno' in message_lower:
+        return "🔴 Contamos con un amplio catálogo de sistemas de frenado: pastillas, discos, tambores, líquido de frenos y más. ¿Para qué marca y modelo de vehículo necesitas las piezas de freno?"
+    
+    elif 'suspension' in message_lower or 'suspensión' in message_lower or 'amortiguador' in message_lower:
+        return "🔧 Especialistas en sistemas de suspensión: amortiguadores, resortes, balatas, brazos de suspensión y más. ¿Qué componente de suspensión necesitas?"
+    
+    elif 'motor' in message_lower or 'aceite' in message_lower:
+        return "🚗 Tenemos refacciones para motor: filtros, aceites, bujías, correas, bombas de agua y más. ¿Qué necesitas para el motor de tu vehículo?"
+        
+    elif 'precio' in message_lower or 'costo' in message_lower or 'cuanto' in message_lower or 'cuánto' in message_lower:
+        return "💰 Manejamos precios competitivos en todas nuestras refacciones. Para obtener una cotización específica, por favor proporciona la marca, modelo y año de tu vehículo, junto con la refacción que necesitas."
+    
+    elif len(message_lower) <= 10:  # Mensajes muy cortos
+        return "🤖 ¡Hola! Soy el asistente de ALM Refaccionaria. Puedes preguntarme sobre:\n\n🔧 Productos y refacciones\n📦 Envíos y entregas\n💳 Métodos de pago\n🛡️ Garantías\n📞 Contacto\n\n¿En qué te puedo ayudar?"
+    
+    # Respuesta por defecto
+    else:
+        return f"🤖 Recibí tu mensaje: '{user_message}'\n\nSoy el asistente de ALM Refaccionaria. Puedo ayudarte con:\n\n🔧 Productos y refacciones automotrices\n📦 Información de envíos\n💳 Métodos de pago\n🛡️ Garantías y devoluciones\n📞 Contacto y soporte\n\nPuedes preguntarme cosas como:\n• '¿Qué productos manejan?'\n• '¿Cómo puedo pagar?'\n• '¿Cuánto tarda el envío?'\n• '¿Tienen frenos para Toyota?'"
+
+
+# Vista para actualizar estado de pedidos desde el admin
+@staff_member_required
+@require_POST
+@csrf_exempt
+def admin_update_order_status(request):
+    """Actualiza el estado de un pedido desde el panel de administración"""
+    try:
+        data = json.loads(request.body)
+        order_history_id = data.get('order_history_id')
+        new_status = data.get('status')
+        
+        # Validar que el estado es válido
+        valid_statuses = ['Pendiente', 'Procesando', 'Enviado', 'Entregado', 'Cancelado']
+        if new_status not in valid_statuses:
+            return JsonResponse({'success': False, 'error': 'Estado no válido'})
+        
+        # Buscar el OrderHistory
+        order_history = get_object_or_404(OrderHistory, id=order_history_id)
+        
+        # Actualizar el estado
+        order_history.status = new_status
+        order_history.save()
+        
+        # También actualizar el estado de la orden si es necesario
+        if new_status == 'Entregado':
+            order_history.order.complete = True
+            order_history.order.status = 'Entregado'
+            order_history.order.save()
+        elif new_status == 'Cancelado':
+            order_history.order.complete = False
+            order_history.order.status = 'Cancelado'
+            order_history.order.save()
+        else:
+            order_history.order.status = new_status
+            order_history.order.save()
+        
+        return JsonResponse({
+            'success': True, 
+            'message': f'Estado actualizado a {new_status}',
+            'new_status': new_status
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+# Vista para dashboard del admin
+@staff_member_required
+def admin_dashboard(request):
+    """Dashboard personalizado para administradores"""
+    # Estadísticas generales
+    total_orders = Order.objects.count()  # Todos los pedidos
+    completed_orders = Order.objects.filter(complete=True).count()
+    pending_orders = Order.objects.filter(complete=False).count()
+    total_customers = Customer.objects.count()
+    total_products = Product.objects.count()
+    low_stock_products = Product.objects.filter(quantity__lte=5).count()
+    
+    # Pedidos recientes (últimos 10)
+    recent_orders = Order.objects.select_related('customer').order_by('-date_ordered')[:10]
+    
+    # Productos con stock bajo
+    low_stock = Product.objects.filter(quantity__lte=5).order_by('quantity')[:10]
+    
+    # Ventas del mes actual
+    current_month = timezone.now().replace(day=1)
+    monthly_orders = Order.objects.filter(
+        complete=True,
+        date_ordered__gte=current_month
+    )
+    
+    monthly_revenue = sum(order.get_cart_total_with_iva for order in monthly_orders)
+    
+    context = {
+        'total_orders': total_orders,
+        'completed_orders': completed_orders,
+        'pending_orders': pending_orders,
+        'total_customers': total_customers,
+        'total_products': total_products,
+        'low_stock_products': low_stock_products,
+        'recent_orders': recent_orders,
+        'low_stock': low_stock,
+        'monthly_revenue': monthly_revenue,
+        'monthly_orders_count': monthly_orders.count(),
+    }
+    
+    return render(request, 'admin/dashboard.html', context)
+
+
+# Vista personalizada para el índice del admin
+@staff_member_required
+def custom_admin_index(request):
+    """Índice personalizado del admin con estadísticas reales"""
+    # Obtener estadísticas reales
+    total_orders = Order.objects.count()
+    pending_orders = Order.objects.filter(complete=False).count()
+    total_customers = Customer.objects.count()
+    total_products = Product.objects.count()
+    
+    context = {
+        'title': 'Panel de Control',
+        'total_orders': total_orders,
+        'pending_orders': pending_orders,
+        'total_customers': total_customers,
+        'total_products': total_products,
+        'has_permission': True,
+        'is_nav_sidebar_enabled': True,
+        'available_apps': admin.site.get_app_list(request),
+    }
+    
+    return render(request, 'admin/index.html', context)

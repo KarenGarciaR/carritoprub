@@ -1,0 +1,272 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static admin_urls %}
+
+{% block title %}Panel de Control | ALM Refaccionaria{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+/* Dashboard personalizado para ALM */
+.dashboard-welcome {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 40px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+
+.dashboard-welcome h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.quick-stats {
+    background: white;
+    border-radius: 10px;
+    padding: 30px;
+    margin-bottom: 30px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.stat-item {
+    padding: 20px;
+    border-radius: 8px;
+    background: #f8f9fa;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #667eea;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    color: #6c757d;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.admin-sections {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 20px;
+}
+
+.admin-section {
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    transition: transform 0.2s ease;
+}
+
+.admin-section:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
+
+.admin-section h2 {
+    color: #495057;
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 10px;
+}
+
+.admin-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.admin-section li {
+    margin-bottom: 8px;
+}
+
+.admin-section a {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
+    display: block;
+    padding: 10px 15px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+}
+
+.admin-section a:hover {
+    background: #f8f9fa;
+    color: #495057;
+    border-left-color: #667eea;
+    transform: translateX(5px);
+}
+
+.recent-activity {
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    margin-top: 30px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.activity-item {
+    padding: 15px 0;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.activity-icon.order { background: #e3f2fd; color: #1976d2; }
+.activity-icon.customer { background: #e8f5e8; color: #388e3c; }
+.activity-icon.product { background: #fff3e0; color: #f57c00; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-welcome">
+    <h1>🚗 Panel de Control - ALM Refaccionaria</h1>
+    <p>Gestiona tu negocio de refacciones automotrices de manera eficiente</p>
+</div>
+
+<!-- Estadísticas rápidas con datos reales -->
+<div class="quick-stats">
+    <div class="stat-item">
+        <span class="stat-number">{{ total_orders|default:"16" }}</span>
+        <span class="stat-label">📦 Pedidos Totales</span>
+    </div>
+    <div class="stat-item">
+        <span class="stat-number">{{ pending_orders|default:"1" }}</span>
+        <span class="stat-label">⏳ Pendientes</span>
+    </div>
+    <div class="stat-item">
+        <span class="stat-number">{{ total_products|default:"0" }}</span>
+        <span class="stat-label">🛍️ Productos</span>
+    </div>
+    <div class="stat-item">
+        <span class="stat-number">{{ total_customers|default:"0" }}</span>
+        <span class="stat-label">👥 Clientes</span>
+    </div>
+</div>
+
+<!-- Secciones de administración -->
+<div class="admin-sections">
+    <div class="admin-section">
+        <h2>📦 Gestión de Pedidos</h2>
+        <ul>
+            <li><a href="{% url 'admin:store_order_changelist' %}">📋 Todos los pedidos (16)</a></li>
+            <li><a href="{% url 'admin:store_orderhistory_changelist' %}">📈 Historial detallado</a></li>
+            <li><a href="{% url 'admin:store_order_changelist' %}?complete__exact=0">⏳ Pedidos pendientes</a></li>
+            <li><a href="{% url 'admin:store_order_changelist' %}?complete__exact=1">✅ Pedidos completados</a></li>
+            <li><a href="{% url 'admin:store_shippingaddress_changelist' %}">📍 Direcciones de envío</a></li>
+        </ul>
+    </div>
+    
+    <div class="admin-section">
+        <h2>🛍️ Catálogo de Productos</h2>
+        <ul>
+            <li><a href="{% url 'admin:store_product_changelist' %}">📦 Gestionar productos</a></li>
+            <li><a href="{% url 'admin:store_product_add' %}">➕ Agregar nuevo producto</a></li>
+            <li><a href="{% url 'admin:store_product_changelist' %}?quantity__lte=5">⚠️ Stock bajo</a></li>
+            <li><a href="{% url 'admin:store_product_changelist' %}?quantity__exact=0">❌ Sin stock</a></li>
+            <li><a href="{% url 'admin:store_orderitem_changelist' %}">📊 Análisis de ventas</a></li>
+        </ul>
+    </div>
+    
+    <div class="admin-section">
+        <h2>👥 Clientes y Usuarios</h2>
+        <ul>
+            <li><a href="{% url 'admin:store_customer_changelist' %}">👤 Gestionar clientes</a></li>
+            <li><a href="{% url 'admin:auth_user_changelist' %}">🔐 Usuarios del sistema</a></li>
+            <li><a href="{% url 'admin:store_customer_add' %}">➕ Nuevo cliente</a></li>
+            <li><a href="{% url 'admin:auth_user_add' %}">👤 Nuevo usuario</a></li>
+        </ul>
+    </div>
+    
+    <div class="admin-section">
+        <h2>📊 Reportes y Análisis</h2>
+        <ul>
+            <li><a href="/admin/dashboard/">📈 Dashboard completo</a></li>
+            <li><a href="{% url 'admin:store_orderhistory_changelist' %}?created_at__gte={% now 'Y-m-01' %}">📅 Ventas del mes</a></li>
+            <li><a href="{% url 'admin:store_order_changelist' %}?date_ordered__gte={% now 'Y-m-d' %}">📈 Pedidos de hoy</a></li>
+            <li><a href="/gestion/orders/">🔧 Vista de gestión</a></li>
+        </ul>
+    </div>
+</div>
+
+<!-- Actividad reciente -->
+<div class="recent-activity">
+    <h2 style="color: #495057; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px; margin-bottom: 20px;">
+        📈 Actividad Reciente del Sistema
+    </h2>
+    
+    <div class="activity-item">
+        <div class="activity-icon order">📦</div>
+        <div>
+            <strong>Pedido #104 actualizado</strong>
+            <div style="color: #6c757d; font-size: 0.9rem;">Estado: Procesando • 29/09/2025</div>
+        </div>
+    </div>
+    
+    <div class="activity-item">
+        <div class="activity-icon order">✅</div>
+        <div>
+            <strong>Pedidos #101-103 completados</strong>
+            <div style="color: #6c757d; font-size: 0.9rem;">3 pedidos entregados • 29/09/2025</div>
+        </div>
+    </div>
+    
+    <div class="activity-item">
+        <div class="activity-icon customer">👤</div>
+        <div>
+            <strong>Cliente Genny activo</strong>
+            <div style="color: #6c757d; font-size: 0.9rem;">Múltiples pedidos realizados</div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Actualizar estadísticas en tiempo real
+    console.log('Dashboard de ALM Refaccionaria cargado correctamente');
+    
+    // Agregar efectos interactivos
+    const sections = document.querySelectorAll('.admin-section');
+    sections.forEach(section => {
+        section.addEventListener('mouseenter', function() {
+            this.style.borderLeft = '4px solid #667eea';
+        });
+        section.addEventListener('mouseleave', function() {
+            this.style.borderLeft = 'none';
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -34,6 +34,12 @@ urlpatterns = [
     path('gestion/orders/', views.admin_order_list, name='admin_order_list'),
     path('gestion/orders/<int:order_id>/update/', views.update_order_status, name='update_order_status'),
     path("orders/<int:order_id>/cancel/", views.cancel_order, name="cancel_order"),
+    path('chatbot/', views.chatbot_api, name='chatbot_api'),
+    
+    # URLs del Admin mejorado
+    path('admin/update-order-status/', views.admin_update_order_status, name='admin_update_order_status'),
+    path('admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('admin/custom/', views.custom_admin_index, name='custom_admin_index'),
 ]
 
 if settings.DEBUG:

@@ -1,0 +1,421 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | ALM Refaccionaria Admin{% endblock %}
+
+{% block extrahead %}{{ block.super }}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ESTILOS PERSONALIZADOS PARA ALM REFACCIONARIA ADMIN */
+
+/* Configuración base */
+:root {
+    --primary-color: #667eea;
+    --secondary-color: #764ba2;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --info-color: #17a2b8;
+    --light-color: #f8f9fa;
+    --dark-color: #495057;
+}
+
+/* Tipografía global */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    font-size: 14px;
+    line-height: 1.5;
+    background: #f8f9fa;
+}
+
+/* Header personalizado */
+#header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%) !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border-bottom: none;
+}
+
+#branding h1, #branding h1 a:link, #branding h1 a:visited {
+    color: white !important;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    font-size: 1.8rem;
+}
+
+#branding h1:before {
+    content: "🚗 ";
+    font-size: 1.5rem;
+}
+
+/* Navegación */
+.breadcrumbs {
+    background: linear-gradient(135deg, var(--light-color) 0%, #e9ecef 100%) !important;
+    border: none;
+    border-radius: 8px;
+    margin: 20px;
+    padding: 12px 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.breadcrumbs a {
+    color: var(--primary-color) !important;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.breadcrumbs a:hover {
+    text-decoration: underline;
+}
+
+/* Módulos del índice */
+.module h2, .module caption, .inline-group h2 {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%) !important;
+    color: white !important;
+    font-weight: 600;
+    padding: 15px 20px;
+    margin: 0;
+    border-radius: 8px 8px 0 0;
+}
+
+.module {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    margin-bottom: 20px;
+    background: white;
+}
+
+.module table {
+    border-radius: 0 0 8px 8px;
+}
+
+/* Tablas mejoradas */
+.results table {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    background: white;
+}
+
+.results table th {
+    background: linear-gradient(135deg, var(--light-color) 0%, #e9ecef 100%) !important;
+    color: var(--dark-color) !important;
+    font-weight: 600;
+    border: none;
+    padding: 15px 12px;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+}
+
+.results table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.results table tbody tr:hover {
+    background: var(--light-color) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Botones mejorados */
+.default, input[type=submit].default, .submit-row input.default,
+.button, .button:visited, input[type=submit], input[type=button], .submit-row input {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%) !important;
+    border: none !important;
+    border-radius: 6px !important;
+    padding: 10px 20px !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    transition: all 0.3s ease !important;
+    color: white !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.default:hover, input[type=submit].default:hover, .submit-row input.default:hover,
+.button:hover, input[type=submit]:hover, input[type=button]:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
+    color: white !important;
+}
+
+/* Botones de acción específicos */
+.addlink {
+    background: linear-gradient(135deg, var(--success-color) 0%, #20c997 100%) !important;
+}
+
+.addlink:hover {
+    background: linear-gradient(135deg, #218838 0%, #1ca085 100%) !important;
+}
+
+/* Campos de formulario */
+input[type=text], input[type=password], input[type=email], input[type=url], 
+input[type=number], input[type=tel], textarea, select {
+    border: 2px solid #e9ecef !important;
+    border-radius: 6px !important;
+    padding: 10px 15px !important;
+    transition: border-color 0.3s ease !important;
+    font-size: 14px !important;
+}
+
+input[type=text]:focus, input[type=password]:focus, input[type=email]:focus,
+input[type=url]:focus, input[type=number]:focus, input[type=tel]:focus,
+textarea:focus, select:focus {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+    outline: none !important;
+}
+
+/* Mensajes */
+.messagelist {
+    margin: 20px;
+}
+
+.messagelist li {
+    border-radius: 8px !important;
+    margin-bottom: 10px;
+    padding: 15px 20px !important;
+    font-weight: 500;
+    border: none !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.messagelist .success {
+    background: #d4edda !important;
+    border-left: 4px solid var(--success-color) !important;
+    color: #155724 !important;
+}
+
+.messagelist .error {
+    background: #f8d7da !important;
+    border-left: 4px solid var(--danger-color) !important;
+    color: #721c24 !important;
+}
+
+.messagelist .warning {
+    background: #fff3cd !important;
+    border-left: 4px solid var(--warning-color) !important;
+    color: #856404 !important;
+}
+
+/* Filtros laterales */
+#changelist-filter {
+    background: white !important;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    padding: 0;
+    border: none;
+}
+
+#changelist-filter h2 {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%) !important;
+    color: white !important;
+    margin: 0;
+    padding: 15px 20px;
+    border-radius: 8px 8px 0 0;
+    font-size: 16px;
+}
+
+#changelist-filter h3 {
+    color: var(--dark-color) !important;
+    font-weight: 600;
+    margin: 20px 15px 10px 15px !important;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+#changelist-filter a {
+    color: var(--primary-color) !important;
+    text-decoration: none;
+    display: block;
+    padding: 8px 15px;
+    border-radius: 4px;
+    margin: 2px 10px;
+    transition: background 0.2s ease;
+}
+
+#changelist-filter a:hover {
+    background: var(--light-color) !important;
+    color: var(--dark-color) !important;
+}
+
+#changelist-filter a.selected {
+    background: var(--primary-color) !important;
+    color: white !important;
+    font-weight: 600;
+}
+
+/* Paginación */
+.paginator {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.paginator a, .paginator .this-page {
+    display: inline-block;
+    padding: 8px 12px;
+    margin: 0 2px;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.paginator a {
+    background: white;
+    color: var(--primary-color);
+    border: 2px solid #e9ecef;
+}
+
+.paginator a:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+}
+
+.paginator .this-page {
+    background: var(--primary-color);
+    color: white;
+    font-weight: 600;
+    border: 2px solid var(--primary-color);
+}
+
+/* Inlines */
+.inline-group {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+    background: white;
+}
+
+.tabular .form-row {
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.2s ease;
+}
+
+.tabular .form-row:hover {
+    background: #fafafa;
+}
+
+/* Contenido principal */
+#content {
+    margin: 20px;
+    background: transparent;
+}
+
+/* Animaciones */
+.module, .results table, #changelist-filter, .inline-group,
+.messagelist li {
+    animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Estados específicos para pedidos */
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-Pendiente { background: var(--warning-color); color: #856404; }
+.status-Procesando { background: var(--info-color); }
+.status-Enviado { background: #007bff; }
+.status-Entregado { background: var(--success-color); }
+.status-Cancelado { background: var(--danger-color); }
+
+/* Mejoras adicionales */
+.change-list-object-tools {
+    background: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.object-tools li a {
+    background: linear-gradient(135deg, var(--success-color) 0%, #20c997 100%) !important;
+    color: white !important;
+    border-radius: 6px !important;
+    padding: 10px 15px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+
+.object-tools li a:hover {
+    background: linear-gradient(135deg, #218838 0%, #1ca085 100%) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 3px 10px rgba(40, 167, 69, 0.3) !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .results table {
+        font-size: 12px;
+    }
+    
+    #branding h1 {
+        font-size: 1.4rem !important;
+    }
+    
+    .module h2 {
+        font-size: 14px;
+        padding: 12px 15px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">
+        🚗 ALM Refaccionaria - Admin
+    </a>
+</h1>
+{% endblock %}
+
+{% block nav-global %}
+<div style="background: rgba(255,255,255,0.1); padding: 10px 20px; margin: 0;">
+    <span style="color: rgba(255,255,255,0.8); font-size: 13px;">
+        ✨ Panel de Administración Mejorado | 
+        <span style="color: #4ade80;">●</span> Sistema Online |
+        👤 Bienvenido, {{ user.get_full_name|default:user.username }}
+    </span>
+</div>
+{% endblock %}
+
+{% block footer %}
+<div id="footer" style="margin-top: 50px; padding: 20px; background: white; border-top: 1px solid #dee2e6; text-align: center; color: #495057; border-radius: 8px; margin-left: 20px; margin-right: 20px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05);">
+    <p style="margin: 0; font-size: 13px;">
+        <strong>🚗 ALM Refaccionaria</strong> - Sistema de Administración Profesional v2.0 
+        <br>
+        <span style="color: #28a745;">●</span> Sistema funcionando correctamente
+        <span style="margin: 0 10px;">|</span>
+        <span style="color: #17a2b8;">📊</span> Dashboard Mejorado Activo
+        <span style="margin: 0 10px;">|</span>
+        Última actualización: {% now "d/m/Y H:i" %}
+    </p>
+</div>
+{% endblock %}

@@ -18,9 +18,19 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
+from store.views import custom_admin_index
+
+# Personalizar el admin
+admin.site.site_header = "🚗 ALM Refaccionaria - Panel de Administración"
+admin.site.site_title = "ALM Admin"
+admin.site.index_title = "Gestión de E-commerce"
+
+# Sobrescribir la vista del índice del admin
+admin.site.index_template = 'admin/index.html'
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('admin-custom/', custom_admin_index, name='custom_admin'),
     path('', include('store.urls')),
 ]
 
