@@ -24,7 +24,20 @@ from django.views.decorators.http import require_POST
 # Create your views here.
 # Home page
 def index(request):
-    return render(request, 'store/store.html')
+    """Página principal con productos destacados"""
+    data = cartData(request)
+    cartItems = data['cartItems']
+    
+    # Obtener productos destacados (puedes filtrar por ofertas, más vendidos, etc.)
+    products_destacados = Product.objects.filter(
+        quantity__gt=0  # Solo productos con stock
+    ).order_by('-id')[:8]  # Los 8 productos más recientes
+    
+    context = {
+        'products_destacados': products_destacados,
+        'cartItems': cartItems
+    }
+    return render(request, 'store/index.html', context)
 
 # Peticiones personalizadas de los usuarios
 @staff_member_required

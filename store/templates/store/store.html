@@ -1,6 +1,9 @@
-{% extends 'store/main.html' %}
+{% extends 'store/base.html' %}
 {% load static %}
-{% block content %}
+
+{% block title %}Productos - ALM Refaccionaria{% endblock %}
+
+{% block extra_css %}
 
 <style>
 .product-info {
@@ -264,14 +267,18 @@
       return cookieValue;
     }
   });
-  
-  document.addEventListener('DOMContentLoaded', function () {
-  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-  tooltipTriggerList.forEach(function (tooltipTriggerEl) {
-    new bootstrap.Tooltip(tooltipTriggerEl);
-  });
-});
-
+    document.addEventListener('DOMContentLoaded', function () {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+            new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
 </script>
+{% endblock %}
 
-{% endblock content %}
+{% block extra_js %}
+{% endblock %}
+
+{% endblock %}
+
+{% block content %}
