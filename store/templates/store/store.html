@@ -695,16 +695,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-    // Botones de vista
-    const viewButtons = document.querySelectorAll('.view-btn');
-    const productsGrid = document.querySelector('.products-grid');
-
-    viewButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            viewButtons.forEach(btn => btn.classList.remove('active'));
-            this.classList.add('active');
-        });
-    });
     
     // 3. BÚSQUEDA SIMPLE
     const searchInput = document.getElementById('searchInput');

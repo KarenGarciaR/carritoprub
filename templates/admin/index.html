@@ -160,7 +160,10 @@
         <h2>👥 Clientes y Usuarios</h2>
         <ul>
             <li><a href="{% url 'admin:store_customer_changelist' %}">👤 Ver clientes</a></li>
-            <li><a href="{% url 'admin:auth_user_changelist' %}">🔐 Gestionar usuarios</a></li>
+            {% url 'admin:auth_user_changelist' as user_url %}
+            {% if user_url %}
+            <li><a href="{{ user_url }}">🔐 Usuarios del sistema</a></li>
+            {% endif %}
             <li><a href="{% url 'admin:store_customer_add' %}">➕ Agregar cliente</a></li>
         </ul>
     </div>

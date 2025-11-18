@@ -944,9 +944,15 @@
                 <h3>ALM Refaccionaria</h3>
                 <p>Suspensiones y Componentes de calidad para tu vehículo. Especialistas en refacciones automotrices con más de 15 años de experiencia.</p>
                 <div class="social-links">
-                    <a href="#"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#"><i class="fab fa-instagram"></i></a>
-                    <a href="#"><i class="fab fa-whatsapp"></i></a>
+                    <a href="https://www.facebook.com/p/Suspensiones-y-sus-Componentes-ALM-Campeche-100075511974740/" target="_blank" rel="noopener noreferrer">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="https://www.instagram.com/alm_refaccionaria" target="_blank" rel="noopener noreferrer">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="https://wa.me/529811602276?text=Hola,%20me%20interesa%20información%20sobre%20sus%20productos%20de%20refacciones%20automotrices" target="_blank" rel="noopener noreferrer">
+                        <i class="fab fa-whatsapp"></i>
+                    </a>
                 </div>
             </div>
             
@@ -1043,14 +1049,17 @@
         });
 
         // Search functionality
-        document.addEventListener('DOMContentLoaded', () => {
+// ===== TODO DENTRO DE DOMContentLoaded =====
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ DOM cargado');
+            
+            // Search functionality
             const input = document.getElementById('search-input');
             const productCards = document.querySelectorAll('.product-card');
 
             if (input && productCards.length > 0) {
                 input.addEventListener('input', () => {
                     const query = input.value.toLowerCase().trim();
-
                     productCards.forEach(card => {
                         const name = card.querySelector('h5')?.textContent.toLowerCase() || '';
                         if (name.includes(query)) {
@@ -1061,49 +1070,63 @@
                     });
                 });
             }
-        });
 
-        // Chatbot functionality
-        const chatbotToggle = document.getElementById('chatbot-toggle');
-        const chatbotWindow = document.getElementById('chatbot-window');
-        const chatbotClose = document.getElementById('chatbot-close');
-        const chatbotMessages = document.getElementById('chatbot-messages');
-        const chatbotInput = document.getElementById('chatbot-input');
-        const chatbotSend = document.getElementById('chatbot-send');
-        
-        if (chatbotToggle && chatbotWindow) {
+            // ===== CHATBOT =====
+            console.log('🚀 Inicializando chatbot...');
+            
+            const chatbotToggle = document.getElementById('chatbot-toggle');
+            const chatbotWindow = document.getElementById('chatbot-window');
+            const chatbotClose = document.getElementById('chatbot-close');
+            const chatbotMessages = document.getElementById('chatbot-messages');
+            const chatbotInput = document.getElementById('chatbot-input');
+            const chatbotSend = document.getElementById('chatbot-send');
+            
+            if (!chatbotToggle || !chatbotWindow) {
+                console.error('❌ Elementos del chatbot no encontrados');
+                return;
+            }
+            
+            console.log('✅ Chatbot listo');
+            
             let isOpen = false;
             
             // Toggle chatbot
-            chatbotToggle.addEventListener('click', function() {
+            chatbotToggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
                 isOpen = !isOpen;
+                
+                console.log('🔄 Toggle chatbot:', isOpen);
+                
                 if (isOpen) {
                     chatbotWindow.classList.add('active');
-                    chatbotInput.focus();
+                    if (chatbotInput) chatbotInput.focus();
                 } else {
                     chatbotWindow.classList.remove('active');
                 }
             });
             
             // Close chatbot
-            chatbotClose.addEventListener('click', function() {
-                isOpen = false;
-                chatbotWindow.classList.remove('active');
-            });
+            if (chatbotClose) {
+                chatbotClose.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    isOpen = false;
+                    chatbotWindow.classList.remove('active');
+                });
+            }
             
-            // Send message
+            // Send message function
             function sendMessage() {
                 const message = chatbotInput.value.trim();
                 if (!message) return;
                 
-                // Add user message
+                console.log('📤 Enviando:', message);
+                
                 addMessage(message, 'user');
                 chatbotInput.value = '';
-                
-                // Show typing indicator
                 showTyping();
                 
-                // Send to API
                 fetch('/chatbot/', {
                     method: 'POST',
                     headers: {
@@ -1117,13 +1140,13 @@
                     if (data.success) {
                         addMessage(data.response, 'bot');
                     } else {
-                        addMessage(data.error || 'Lo siento, hay un problema técnico. ¡Inténtalo de nuevo!', 'bot');
+                        addMessage(data.error || 'Lo siento, hay un problema técnico.', 'bot');
                     }
                 })
                 .catch(error => {
                     hideTyping();
                     console.error('Error:', error);
-                    addMessage('Lo siento, no puedo responder en este momento. Por favor, intenta más tarde.', 'bot');
+                    addMessage('Lo siento, no puedo responder en este momento.', 'bot');
                 });
             }
             
@@ -1161,7 +1184,6 @@
                         <div class="typing-dot"></div>
                     </div>
                 `;
-                
                 chatbotMessages.appendChild(typingDiv);
                 chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
             }
@@ -1175,21 +1197,20 @@
             }
             
             // Event listeners
-            chatbotSend.addEventListener('click', sendMessage);
+            if (chatbotSend) {
+                chatbotSend.addEventListener('click', sendMessage);
+            }
             
-            chatbotInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    sendMessage();
-                }
-            });
-            
-            // Prevent form submission on enter
-            chatbotInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                }
-            });
-        }
+            if (chatbotInput) {
+                chatbotInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        sendMessage();
+                    }
+                });
+            }
+        }); // FIN DOMContentLoaded
+
     </script>
 
     {% block extra_js %}{% endblock %}

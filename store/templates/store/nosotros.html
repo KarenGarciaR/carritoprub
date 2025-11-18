@@ -57,19 +57,21 @@
     }
 
     .about-image {
-        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        background: white;
         border-radius: 20px;
-        padding: 3rem;
+        padding: 2rem;
         display: flex;
         align-items: center;
         justify-content: center;
         min-height: 400px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
     }
 
-    .about-image i {
-        font-size: 10rem;
-        color: white;
-        opacity: 0.3;
+    .about-image img {
+        width: 100%;
+        height: auto;
+        max-width: 500px;
+        object-fit: contain;
     }
 
     /* Values Section */
@@ -144,7 +146,7 @@
     }
 
     /* Stats Section */
-        .stats-section {
+    .stats-section {
         background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
         color: white;
         padding: 5rem 2rem;
@@ -182,6 +184,11 @@
         .stat-item h3 {
             font-size: 2.5rem;
         }
+
+        .about-image {
+            padding: 1rem;
+            min-height: 300px;
+        }
     }
 </style>
 {% endblock %}
@@ -215,7 +222,7 @@
             </p>
         </div>
         <div class="about-image">
-            <i class="fas fa-truck"></i>
+            <img src="{% static 'images/OficialLogoALM.png' %}" alt="ALM Refaccionaria - Suspensiones y Componentes">
         </div>
     </div>
 </section>
