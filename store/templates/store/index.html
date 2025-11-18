@@ -5,10 +5,156 @@
 
 {% block extra_css %}
 <style>
-    /* Hero Section */
-    .hero {
+    /* Carousel Styles */
+    .main-carousel {
         position: relative;
-        height: 90vh;
+        overflow: hidden;
+        border-radius: 0;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .carousel-item {
+        height: 70vh;
+        min-height: 500px;
+        position: relative;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+    
+    .carousel-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, rgba(0,0,0,0.6), rgba(0,0,0,0.3));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .carousel-content {
+        text-align: center;
+        color: white;
+        max-width: 800px;
+        padding: 2rem;
+        z-index: 2;
+    }
+    
+    .carousel-content h1 {
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+        animation: fadeInUp 1s ease;
+    }
+    
+    .carousel-content .subtitle {
+        font-size: 1.8rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+    }
+    
+    .carousel-content p {
+        font-size: 1.2rem;
+        margin-bottom: 2rem;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        opacity: 0.95;
+    }
+    
+    .carousel-btn {
+        display: inline-block;
+        padding: 15px 35px;
+        background: var(--primary-color);
+        color: white;
+        text-decoration: none;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(255, 140, 0, 0.3);
+    }
+    
+    .carousel-btn:hover {
+        background: #e67e00;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 140, 0, 0.4);
+        color: white;
+    }
+    
+    .carousel-indicators {
+        bottom: 20px;
+    }
+    
+    .carousel-indicators [data-bs-target] {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, 0.5);
+        border: 2px solid white;
+    }
+    
+    .carousel-indicators .active {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .carousel-control-prev,
+    .carousel-control-next {
+        width: 60px;
+        height: 60px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        transition: all 0.3s;
+    }
+    
+    .carousel-control-prev {
+        left: 30px;
+    }
+    
+    .carousel-control-next {
+        right: 30px;
+    }
+    
+    .carousel-control-prev:hover,
+    .carousel-control-next:hover {
+        background: rgba(255, 140, 0, 0.8);
+        border-color: var(--primary-color);
+    }
+    
+    .carousel-control-prev-icon,
+    .carousel-control-next-icon {
+        width: 24px;
+        height: 24px;
+    }
+    
+    /* Slide type badges */
+    .slide-type-badge {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        z-index: 3;
+    }
+    
+    .badge-promotion { background: #e74c3c; color: white; }
+    .badge-business { background: #3498db; color: white; }
+    .badge-product { background: #f39c12; color: white; }
+    .badge-service { background: #27ae60; color: white; }
+    .badge-announcement { background: #9b59b6; color: white; }
+    
+    /* Default hero for when no slides */
+    .default-hero {
+        position: relative;
+        height: 70vh;
         background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
         display: flex;
         align-items: center;
@@ -16,7 +162,7 @@
         overflow: hidden;
     }
 
-    .hero::before {
+    .default-hero::before {
         content: '';
         position: absolute;
         top: 0;
@@ -27,7 +173,7 @@
         background-size: cover;
     }
 
-    .hero-content {
+    .default-hero-content {
         position: relative;
         z-index: 1;
         text-align: center;
@@ -36,18 +182,18 @@
         padding: 2rem;
     }
 
-    .hero-content h1 {
+    .default-hero-content h1 {
         font-size: 3.5rem;
         font-weight: 800;
         margin-bottom: 1rem;
         animation: fadeInUp 1s ease;
     }
 
-    .hero-content .highlight {
+    .default-hero-content .highlight {
         color: var(--primary-color);
     }
 
-    .hero-content p {
+    .default-hero-content p {
         font-size: 1.3rem;
         margin-bottom: 2rem;
         color: #b2bec3;
@@ -313,9 +459,69 @@
 {% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<section class="hero">
-    <div class="hero-content">
+<!-- Carousel Section -->
+{% if carousel_slides %}
+<div id="mainCarousel" class="carousel slide main-carousel" data-bs-ride="carousel" data-bs-interval="5000">
+    <!-- Indicators -->
+    <div class="carousel-indicators">
+        {% for slide in carousel_slides %}
+        <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="{{ forloop.counter0 }}" 
+                {% if forloop.first %}class="active"{% endif %} aria-current="true" aria-label="Slide {{ forloop.counter }}"></button>
+        {% endfor %}
+    </div>
+    
+    <!-- Slides -->
+    <div class="carousel-inner">
+        {% for slide in carousel_slides %}
+        <div class="carousel-item {% if forloop.first %}active{% endif %}" 
+             style="background-image: url('{{ slide.image_url }}'); background-color: {{ slide.background_color }};">
+            
+            <!-- Type Badge -->
+            <div class="slide-type-badge badge-{{ slide.slide_type }}">
+                {% if slide.slide_type == 'promotion' %}🏷️ Promoción
+                {% elif slide.slide_type == 'business' %}🏢 Negocio
+                {% elif slide.slide_type == 'product' %}🔧 Producto
+                {% elif slide.slide_type == 'service' %}⚙️ Servicio
+                {% elif slide.slide_type == 'announcement' %}📢 Anuncio
+                {% endif %}
+            </div>
+            
+            <!-- Content Overlay -->
+            <div class="carousel-overlay">
+                <div class="carousel-content" style="color: {{ slide.text_color }};">
+                    <h1>{{ slide.title }}</h1>
+                    {% if slide.subtitle %}
+                        <div class="subtitle">{{ slide.subtitle }}</div>
+                    {% endif %}
+                    {% if slide.description %}
+                        <p>{{ slide.description }}</p>
+                    {% endif %}
+                    {% if slide.button_text and slide.button_link %}
+                        <a href="{{ slide.button_link }}" class="carousel-btn" 
+                           {% if slide.external_link %}target="_blank" rel="noopener"{% endif %}>
+                            {{ slide.button_text }}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Controls -->
+    <button class="carousel-control-prev" type="button" data-bs-target="#mainCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Anterior</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#mainCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Siguiente</span>
+    </button>
+</div>
+{% else %}
+<!-- Default Hero Section cuando no hay slides -->
+<section class="default-hero">
+    <div class="default-hero-content">
         <h1>
             Suspensiones y Componentes <span class="highlight">ALM</span>
         </h1>
@@ -327,13 +533,14 @@
                 <i class="fas fa-shopping-bag"></i>
                 Ver Catálogo
             </a>
-            <a href="#" class="btn btn-secondary">
+            <a href="{% url 'contacto' %}" class="btn btn-secondary">
                 <i class="fas fa-phone"></i>
                 Contáctanos
             </a>
         </div>
     </div>
 </section>
+{% endif %}
 
 <!-- Features Section -->
 <section class="features">

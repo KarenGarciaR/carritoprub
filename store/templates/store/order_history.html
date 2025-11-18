@@ -214,9 +214,9 @@
                                     </small>
                                 </div>
                                 <div class="col-md-4 text-end">
-                                    <button class="btn btn-outline-primary btn-sm" onclick="showOrderDetails({{ history.order.id }})">
+                                    <a href="{% url 'order_detail' history.order.id %}" class="btn btn-outline-primary btn-sm">
                                         <i class="fas fa-eye me-1"></i>Ver Detalles
-                                    </button>
+                                    </a>
                                 </div>
                             </div>
                             
@@ -256,12 +256,5 @@
         {% endif %}
     </div>
 </section>
-
-<script>
-function showOrderDetails(orderId) {
-    // Esta función puede expandirse para mostrar más detalles del pedido
-    alert('Funcionalidad de detalles del pedido #' + orderId + ' próximamente.');
-}
-</script>
 
 {% endblock content %}

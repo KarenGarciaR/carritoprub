@@ -1,7 +1,7 @@
 from django import forms 
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Product, Customer, Order
+from .models import Product, Customer, Order, CustomerAddress
 
 class SignupForm(UserCreationForm):
     class Meta:
@@ -115,3 +115,97 @@ class OrderUpdateForm(forms.ModelForm):
         widgets = {
             'status': forms.Select(attrs={'class': 'form-select'}),
         }
+
+class CustomerAddressForm(forms.ModelForm):
+    """Formulario para agregar/editar direcciones del cliente"""
+    class Meta:
+        model = CustomerAddress
+        fields = [
+            'nickname', 'full_name', 'phone', 'address', 'neighborhood', 
+            'city', 'state', 'zipcode', 'references', 'is_default'
+        ]
+        widgets = {
+            'nickname': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'Ej: Casa, Trabajo, Casa de mamá'
+            }),
+            'full_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Nombre completo del destinatario'
+            }),
+            'phone': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Teléfono de contacto'
+            }),
+            'address': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Calle y número'
+            }),
+            'neighborhood': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Colonia (opcional)'
+            }),
+            'city': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ciudad o municipio'
+            }),
+            'state': forms.Select(attrs={'class': 'form-select'}),
+            'zipcode': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Código postal'
+            }),
+            'references': forms.Textarea(attrs={
+                'class': 'form-control', 
+                'rows': 2,
+                'placeholder': 'Referencias adicionales (opcional)'
+            }),
+            'is_default': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.customer = kwargs.pop('customer', None)
+        super().__init__(*args, **kwargs)
+        
+        # Si el cliente no tiene direcciones, hacer esta la principal por defecto
+        if self.customer and not self.customer.addresses.exists():
+            self.fields['is_default'].initial = True
+
+    def clean_zipcode(self):
+        zipcode = self.cleaned_data.get('zipcode')
+        if zipcode and not zipcode.isdigit():
+            raise forms.ValidationError("El código postal debe contener solo números.")
+        if zipcode and len(zipcode) != 5:
+            raise forms.ValidationError("El código postal debe tener 5 dígitos.")
+        return zipcode
+
+    def save(self, commit=True):
+        address = super().save(commit=False)
+        if self.customer:
+            address.customer = self.customer
+        if commit:
+            address.save()
+        return address
+
+class AddressSelectionForm(forms.Form):
+    """Formulario para seleccionar una dirección durante el checkout"""
+    selected_address = forms.ModelChoiceField(
+        queryset=CustomerAddress.objects.none(),
+        widget=forms.RadioSelect(attrs={'class': 'form-check-input'}),
+        empty_label=None,
+        required=False
+    )
+    use_new_address = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
+
+    def __init__(self, customer=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if customer:
+            self.fields['selected_address'].queryset = customer.addresses.all()
+            # Si el cliente tiene direcciones, pre-seleccionar la principal
+            default_address = customer.addresses.filter(is_default=True).first()
+            if default_address:
+                self.fields['selected_address'].initial = default_address

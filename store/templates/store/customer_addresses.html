@@ -1,0 +1,286 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Direcciones - ALM Refaccionaria</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <style>
+        :root {
+            --primary-color: #dc3545;
+            --secondary-color: #6c757d;
+            --success-color: #198754;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+        }
+
+        .address-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .address-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(220, 53, 69, 0.15);
+        }
+
+        .address-card.default {
+            border-color: var(--success-color);
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+
+        .address-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .address-nickname {
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .default-badge {
+            background: var(--success-color);
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .address-info {
+            color: var(--secondary-color);
+            line-height: 1.6;
+        }
+
+        .address-full-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .address-actions {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .btn-action {
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+            border-radius: 25px;
+            padding: 0.375rem 1rem;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background: #c82333;
+            border-color: #c82333;
+            transform: translateY(-1px);
+        }
+
+        .btn-outline-success:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-outline-danger:hover {
+            transform: translateY(-1px);
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #c82333 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: var(--secondary-color);
+            margin-bottom: 1rem;
+        }
+
+        .navbar-brand {
+            color: var(--primary-color) !important;
+            font-weight: bold;
+        }
+
+        .cart-badge {
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'index' %}">
+                <i class="fas fa-tools"></i> ALM Refaccionaria
+            </a>
+            
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{% url 'store' %}">Tienda</a>
+                <a class="nav-link" href="{% url 'cart' %}">
+                    <i class="fas fa-shopping-cart"></i>
+                    Carrito
+                    {% if cartItems > 0 %}
+                        <span class="cart-badge">{{ cartItems }}</span>
+                    {% endif %}
+                </a>
+                <a class="nav-link" href="{% url 'profile' %}">Perfil</a>
+                <a class="nav-link" href="{% url 'logout' %}">Salir</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-0">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Mis Direcciones de Envío
+                    </h1>
+                    <p class="mb-0 mt-2 opacity-75">Gestiona tus direcciones de entrega</p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <a href="{% url 'add_address' %}" class="btn btn-light btn-lg">
+                        <i class="fas fa-plus"></i>
+                        Agregar Dirección
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="container">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% if addresses %}
+            <div class="row">
+                {% for address in addresses %}
+                    <div class="col-lg-6 col-xl-4">
+                        <div class="address-card {% if address.is_default %}default{% endif %}">
+                            <div class="address-header">
+                                <div class="address-nickname">
+                                    <i class="fas fa-home"></i>
+                                    {{ address.nickname }}
+                                </div>
+                                {% if address.is_default %}
+                                    <span class="default-badge">
+                                        <i class="fas fa-star"></i>
+                                        Principal
+                                    </span>
+                                {% endif %}
+                            </div>
+
+                            <div class="address-full-name">
+                                <i class="fas fa-user"></i>
+                                {{ address.full_name }}
+                            </div>
+
+                            <div class="address-info">
+                                <div class="mb-1">
+                                    <i class="fas fa-phone text-muted"></i>
+                                    {{ address.phone }}
+                                </div>
+                                <div class="mb-1">
+                                    <i class="fas fa-map-marker-alt text-muted"></i>
+                                    {{ address.full_address }}
+                                </div>
+                                {% if address.references %}
+                                    <div class="mb-1">
+                                        <i class="fas fa-info-circle text-muted"></i>
+                                        {{ address.references }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="address-actions">
+                                <a href="{% url 'edit_address' address.id %}" class="btn btn-outline-primary btn-action btn-sm">
+                                    <i class="fas fa-edit"></i>
+                                    Editar
+                                </a>
+                                {% if not address.is_default %}
+                                    <a href="{% url 'set_default_address' address.id %}" class="btn btn-outline-success btn-action btn-sm">
+                                        <i class="fas fa-star"></i>
+                                        Hacer Principal
+                                    </a>
+                                {% endif %}
+                                {% if addresses|length > 1 %}
+                                    <a href="{% url 'delete_address' address.id %}" class="btn btn-outline-danger btn-action btn-sm">
+                                        <i class="fas fa-trash"></i>
+                                        Eliminar
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-map-marker-alt"></i>
+                <h3>No tienes direcciones registradas</h3>
+                <p class="text-muted">Agrega tu primera dirección de envío para realizar pedidos más rápido.</p>
+                <a href="{% url 'add_address' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus"></i>
+                    Agregar Primera Dirección
+                </a>
+            </div>
+        {% endif %}
+
+        <!-- Back Button -->
+        <div class="text-center mt-4">
+            <a href="{% url 'profile' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Volver al Perfil
+            </a>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

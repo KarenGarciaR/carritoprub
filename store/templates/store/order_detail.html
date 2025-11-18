@@ -1,320 +1,332 @@
-{% extends 'store/main.html' %}
+{% extends 'store/base.html' %}
 {% load static %}
-{% block content %}
-<div class="container py-4">
-  <div class="row">
-    <!-- Información Principal del Pedido -->
-    <div class="col-lg-8">
-      <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-          <h4 class="mb-0">📋 Detalle del Pedido #{{ order.id }}</h4>
-        </div>
-        <div class="card-body">
-          <!-- Estado del pedido con badge -->
-          <div class="row mb-3">
-            <div class="col-sm-4"><strong>Estado:</strong></div>
-            <div class="col-sm-8">
-              {% if order.status|lower == "pendiente" %}
-                <span class="badge bg-warning text-dark fs-6">⏳ Pendiente</span>
-                <small class="text-muted d-block">Falta completar pago</small>
-              {% elif order.status|lower == "procesando" %}
-                <span class="badge bg-info text-white fs-6">🔄 Procesando</span>
-                <small class="text-success d-block">✓ Pago confirmado</small>
-              {% elif order.status|lower == "enviado" %}
-                <span class="badge bg-info text-dark fs-6">📦 Enviado</span>
-              {% elif order.status|lower == "entregado" %}
-                <span class="badge bg-success fs-6">✅ Entregado</span>
-              {% elif order.status|lower == "cancelado" %}
-                <span class="badge bg-danger text-white fs-6">❌ Cancelado</span>
-              {% elif order.status|lower == "reembolso_pendiente" %}
-                <span class="badge bg-warning text-dark fs-6">💰 Reembolso Pendiente</span>
-              {% elif order.status|lower == "reembolsado" %}
-                <span class="badge bg-success fs-6">💚 Reembolsado</span>
-              {% else %}
-                <span class="badge bg-secondary fs-6">{{ order.status }}</span>
-              {% endif %}
-            </div>
-          </div>
-          
-          <!-- Información de fechas -->
-          <div class="row mb-3">
-            <div class="col-sm-4"><strong>Fecha del Pedido:</strong></div>
-            <div class="col-sm-8">{{ order.date_ordered|date:"d/m/Y H:i" }}</div>
-          </div>
-          
-          {% if order.estimated_delivery %}
-          <div class="row mb-3">
-            <div class="col-sm-4"><strong>Entrega estimada:</strong></div>
-            <div class="col-sm-8">{{ order.estimated_delivery|date:"d/m/Y" }}</div>
-          </div>
-          {% endif %}
 
-          <!-- Método de pago -->
-          {% if order.payment_method %}
-          <div class="row mb-3">
-            <div class="col-sm-4"><strong>Método de Pago:</strong></div>
-            <div class="col-sm-8">
-              <span class="badge bg-secondary">{{ order.get_payment_method_display }}</span>
-            </div>
-          </div>
-          {% endif %}
+{% block title %}Detalle del Pedido #{{ order.id }} - ALM Refaccionaria{% endblock %}
 
-          <!-- Información del cliente -->
-          {% if order.customer %}
-          <div class="row mb-3">
-            <div class="col-sm-4"><strong>Cliente:</strong></div>
-            <div class="col-sm-8">{{ order.customer.name }} ({{ order.customer.email }})</div>
-          </div>
-          {% endif %}
-        </div>
-      </div>
-
-      <!-- Lista de productos -->
-      <div class="card shadow-sm mt-4">
-        <div class="card-header bg-secondary text-white">
-          <h5 class="mb-0">🛍️ Productos del Pedido</h5>
-        </div>
-        <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-hover mb-0">
-              <thead class="table-light">
-                <tr>
-                  <th>Producto</th>
-                  <th>Precio Unitario</th>
-                  <th>Cantidad</th>
-                  <th>Subtotal</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for item in order.orderitem_set.all %}
-                <tr>
-                  <td>
-                    <div class="d-flex align-items-center">
-                      {% if item.product.image %}
-                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" 
-                             class="rounded me-3" style="width: 50px; height: 50px; object-fit: cover;">
-                      {% endif %}
-                      <div>
-                        <strong>{{ item.product.name }}</strong>
-                        {% if item.product.description %}
-                          <br><small class="text-muted">{{ item.product.description|truncatechars:50 }}</small>
-                        {% endif %}
-                      </div>
-                    </div>
-                  </td>
-                  <td>${{ item.product.price|floatformat:2 }}</td>
-                  <td>{{ item.quantity }}</td>
-                  <td><strong>${{ item.get_total|floatformat:2 }}</strong></td>
-                </tr>
-                {% endfor %}
-              </tbody>
-              <tfoot class="table-dark">
-                <tr>
-                  <th colspan="3">Total del Pedido:</th>
-                  <th class="fs-5">${{ order.get_cart_total|floatformat:2 }}</th>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Panel de Acciones -->
-    <div class="col-lg-4">
-      <!-- Acciones disponibles -->
-      <div class="card shadow-sm">
-        <div class="card-header bg-warning text-dark">
-          <h5 class="mb-0">⚙️ Acciones Disponibles</h5>
-        </div>
-        <div class="card-body">
-          
-          <!-- Botón de regresar -->
-          <a href="{% url 'order_history' %}" class="btn btn-outline-secondary w-100 mb-3">
-            <i class="bi bi-arrow-left"></i> Volver al Historial
-          </a>
-
-          <!-- Formulario de cancelación (solo si puede cancelarse) -->
-          {% if order.status|lower == "pendiente" or order.status|lower == "procesando" or order.status|lower == "enviado" %}
-            <div class="alert alert-info p-3 mb-3">
-              <i class="bi bi-info-circle"></i> 
-              <strong>Cancelar Pedido</strong><br>
-              <small>Puedes cancelar este pedido y solicitar reembolso si aplica.</small>
-            </div>
-            
-            <form action="{% url 'cancel_order' order.id %}" method="post">
-              {% csrf_token %}
-              
-              <div class="mb-3">
-                <label for="cancel_reason" class="form-label">
-                  <strong>Motivo de cancelación:</strong>
-                </label>
-                <select class="form-select" name="cancel_reason" id="cancel_reason" required>
-                  <option value="">Selecciona un motivo...</option>
-                  <option value="Cliente cambió de opinión">Cambié de opinión</option>
-                  <option value="Encontré mejor precio">Encontré mejor precio</option>
-                  <option value="Ya no necesito el producto">Ya no necesito el producto</option>
-                  <option value="Tiempo de entrega muy largo">Tiempo de entrega muy largo</option>
-                  <option value="Error en el pedido">Error en el pedido</option>
-                  <option value="Producto defectuoso">Producto defectuoso</option>
-                  <option value="No llegó a tiempo">No llegó a tiempo</option>
-                  <option value="Otro">Otro motivo</option>
-                </select>
-              </div>
-              
-              <!-- Información adicional sobre reembolsos -->
-              {% if order.status|lower == "procesando" or order.status|lower == "enviado" %}
-                <div class="alert alert-warning p-2 mb-3">
-                  <small>
-                    <i class="bi bi-exclamation-triangle"></i>
-                    <strong>Política de Reembolso:</strong><br>
-                    • Se solicitará reembolso automáticamente<br>
-                    • Deberás devolver los artículos<br>
-                    • Proceso de evaluación: 3-5 días hábiles<br>
-                    • Reembolso: 7-14 días tras aprobación
-                  </small>
-                </div>
-              {% endif %}
-              
-              <button type="submit" class="btn btn-danger w-100"
-                      onclick="return showCancelConfirmation();">
-                <i class="bi bi-x-circle"></i> 
-                {% if order.status|lower == "pendiente" %}
-                  Cancelar Pedido
-                {% else %}
-                  Cancelar y Solicitar Reembolso
-                {% endif %}
-              </button>
-            </form>
-            
-          {% elif order.status|lower == "cancelado" %}
-            <div class="alert alert-secondary">
-              <i class="bi bi-x-circle"></i> 
-              <strong>Pedido Cancelado</strong><br>
-              <small>Este pedido ya ha sido cancelado.</small>
-              {% if order.refund_reason %}
-                <br><small><strong>Motivo:</strong> {{ order.refund_reason }}</small>
-              {% endif %}
-            </div>
-            
-          {% elif order.status|lower == "reembolso_pendiente" %}
-            <div class="alert alert-warning">
-              <i class="bi bi-clock-history"></i> 
-              <strong>Reembolso en Proceso</strong><br>
-              <small>Tu solicitud de reembolso está siendo evaluada.</small>
-              {% if order.refund_requested_date %}
-                <br><small><strong>Solicitado:</strong> {{ order.refund_requested_date|date:"d/m/Y H:i" }}</small>
-              {% endif %}
-            </div>
-            
-          {% elif order.status|lower == "reembolsado" %}
-            <div class="alert alert-success">
-              <i class="bi bi-check-circle"></i> 
-              <strong>Reembolso Procesado</strong><br>
-              <small>El reembolso ha sido procesado exitosamente.</small>
-              {% if order.refund_processed_date %}
-                <br><small><strong>Procesado:</strong> {{ order.refund_processed_date|date:"d/m/Y H:i" }}</small>
-              {% endif %}
-            </div>
-            
-          {% elif order.status|lower == "entregado" %}
-            <div class="alert alert-success">
-              <i class="bi bi-check-circle"></i> 
-              <strong>Pedido Entregado</strong><br>
-              <small>Tu pedido ha sido entregado exitosamente.</small>
-            </div>
-            
-          {% else %}
-            <div class="alert alert-info">
-              <i class="bi bi-info-circle"></i> 
-              <strong>Sin acciones disponibles</strong><br>
-              <small>No hay acciones disponibles para este pedido en este momento.</small>
-            </div>
-          {% endif %}
-          
-        </div>
-      </div>
-
-      <!-- Panel de información adicional -->
-      <div class="card shadow-sm mt-3">
-        <div class="card-header bg-light">
-          <h6 class="mb-0">📞 ¿Necesitas Ayuda?</h6>
-        </div>
-        <div class="card-body">
-          <small>
-            Si tienes alguna pregunta sobre tu pedido, puedes contactarnos:<br>
-            • Email: soporte@tuempresa.com<br>
-            • Teléfono: +1 234 567 8900<br>
-            • Horario: Lun-Vie 9:00-18:00
-          </small>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-function showCancelConfirmation() {
-    const orderStatus = "{{ order.status|lower }}";
-    let title, html;
-    
-    if (orderStatus === "pendiente") {
-        title = "¿Cancelar pedido?";
-        html = `
-            <div style="text-align: center;">
-                <i class="bi bi-exclamation-triangle" style="font-size: 3rem; color: #ffc107;"></i>
-                <h4 style="margin: 1rem 0; color: #2c3e50;">Cancelación de pedido</h4>
-                <p style="color: #6c757d;">¿Estás seguro que deseas cancelar este pedido?</p>
-                <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 0.5rem; padding: 1rem; margin: 1rem 0;">
-                    <small style="color: #856404;">
-                        <strong>⚠️ Ten en cuenta:</strong><br>
-                        • Esta acción no se puede deshacer<br>
-                        • El pedido será cancelado inmediatamente
-                    </small>
-                </div>
-            </div>
-        `;
-    } else {
-        title = "¿Solicitar reembolso?";
-        html = `
-            <div style="text-align: center;">
-                <i class="bi bi-cash-stack" style="font-size: 3rem; color: #dc3545;"></i>
-                <h4 style="margin: 1rem 0; color: #2c3e50;">Cancelación y reembolso</h4>
-                <p style="color: #6c757d;">¿Estás seguro que deseas cancelar este pedido y solicitar reembolso?</p>
-                <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 0.5rem; padding: 1rem; margin: 1rem 0;">
-                    <small style="color: #721c24;">
-                        <strong>📋 Política de reembolso:</strong><br>
-                        • Deberás devolver los artículos<br>
-                        • Proceso de evaluación: 3-5 días hábiles<br>
-                        • Reembolso: 7-14 días tras aprobación<br>
-                        • Esta acción no se puede deshacer
-                    </small>
-                </div>
-            </div>
-        `;
+{% block extra_css %}
+<style>
+    .order-detail-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 2rem;
     }
-    
-    Swal.fire({
-        title: title,
-        html: html,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#dc3545',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: orderStatus === "pendiente" ? 'Sí, cancelar' : 'Sí, solicitar reembolso',
-        cancelButtonText: 'No, mantener pedido',
-        reverseButtons: true,
-        allowOutsideClick: false,
-        focusCancel: true
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Si confirma, enviar el formulario
-            document.querySelector('form[action*="cancel_order"]').submit();
+
+    .order-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .order-status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+
+    .status-pending { background: #ffc107; color: #212529; }
+    .status-processing { background: #17a2b8; color: white; }
+    .status-shipped { background: #007bff; color: white; }
+    .status-delivered { background: #28a745; color: white; }
+    .status-cancelled { background: #dc3545; color: white; }
+
+    .detail-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+
+    .detail-card-header {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .detail-card-body {
+        padding: 2rem;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .info-label {
+        font-weight: 600;
+        color: #6c757d;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .info-value {
+        font-size: 1.1rem;
+        color: #212529;
+    }
+
+    .btn-refund {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s;
+    }
+
+    .btn-refund:hover {
+        background: #c82333;
+        color: white;
+        text-decoration: none;
+        transform: translateY(-1px);
+    }
+
+    @media (max-width: 768px) {
+        .order-detail-container {
+            padding: 1rem;
         }
-    });
-    
-    return false; // Prevenir el submit automático
-}
-</script>
+        
+        .info-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="order-detail-container">
+    <!-- Header del Pedido -->
+    <div class="order-header">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h1 class="mb-2">
+                    <i class="fas fa-receipt me-2"></i>
+                    Pedido #{{ order.id }}
+                </h1>
+                <p class="mb-3 opacity-75">
+                    <i class="fas fa-calendar me-2"></i>
+                    Realizado el {{ order.date_ordered|date:"d/m/Y H:i" }}
+                </p>
+                <div class="order-status-badge 
+                    {% if order.status == 'Pendiente' %}status-pending
+                    {% elif order.status == 'Procesando' %}status-processing
+                    {% elif order.status == 'Enviado' %}status-shipped
+                    {% elif order.status == 'Entregado' %}status-delivered
+                    {% elif order.status == 'Cancelado' %}status-cancelled
+                    {% endif %}">
+                    {% if order.status == 'Pendiente' %}
+                        <i class="fas fa-clock"></i>
+                    {% elif order.status == 'Procesando' %}
+                        <i class="fas fa-cogs"></i>
+                    {% elif order.status == 'Enviado' %}
+                        <i class="fas fa-truck"></i>
+                    {% elif order.status == 'Entregado' %}
+                        <i class="fas fa-check-circle"></i>
+                    {% elif order.status == 'Cancelado' %}
+                        <i class="fas fa-times-circle"></i>
+                    {% endif %}
+                    {{ order.status }}
+                </div>
+            </div>
+            <div class="text-end">
+                <div class="h2 mb-0">${{ order.get_cart_total_with_iva|floatformat:2 }}</div>
+                <small class="opacity-75">Total con IVA</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Información del Pedido -->
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <h3 class="mb-0">
+                <i class="fas fa-info-circle me-2"></i>
+                Información del Pedido
+            </h3>
+        </div>
+        <div class="detail-card-body">
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">ID de Transacción</span>
+                    <span class="info-value">{{ order.transaction_id|default:"No disponible" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Método de Pago</span>
+                    <span class="info-value">
+                        {% if order_history.payment_method == 'bank-transfer' %}
+                            <i class="fas fa-university me-2"></i>Transferencia Bancaria
+                        {% elif order_history.payment_method == 'bank-deposit' %}
+                            <i class="fas fa-money-check-alt me-2"></i>Depósito Bancario
+                        {% elif order_history.payment_method == 'online-payment' %}
+                            <i class="fas fa-credit-card me-2"></i>Pago en Línea
+                        {% else %}
+                            No especificado
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Total de Artículos</span>
+                    <span class="info-value">{{ order.get_cart_items }} artículo{{ order.get_cart_items|pluralize }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Estado de Pago</span>
+                    <span class="info-value">
+                        {% if order.complete %}
+                            <i class="fas fa-check-circle text-success me-2"></i>Pagado
+                        {% else %}
+                            <i class="fas fa-clock text-warning me-2"></i>Pendiente
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Productos del Pedido -->
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <h3 class="mb-0">
+                <i class="fas fa-box me-2"></i>
+                Productos Pedidos
+            </h3>
+        </div>
+        <div class="detail-card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Precio</th>
+                            <th>Cantidad</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.orderitem_set.all %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if item.product.image %}
+                                        <img src="{{ item.product.imageURL }}" alt="{{ item.product.name }}" width="60" height="60" class="me-3 rounded">
+                                    {% else %}
+                                        <div class="me-3 bg-light d-flex align-items-center justify-content-center rounded" style="width: 60px; height: 60px;">
+                                            <i class="fas fa-image text-muted"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <strong>{{ item.product.name }}</strong>
+                                        {% if item.product.description %}
+                                            <br><small class="text-muted">{{ item.product.description|truncatewords:10 }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>${{ item.product.price|floatformat:2 }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td><strong>${{ item.get_total|floatformat:2 }}</strong></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                            <td><strong>${{ order.get_cart_total|floatformat:2 }}</strong></td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" class="text-end"><strong>IVA (16%):</strong></td>
+                            <td><strong>${{ order.get_cart_iva|floatformat:2 }}</strong></td>
+                        </tr>
+                        <tr class="border-top">
+                            <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                            <td><strong class="text-primary">${{ order.get_cart_total_with_iva|floatformat:2 }}</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de Reembolso -->
+    {% if refund %}
+    <div class="detail-card">
+        <div class="detail-card-header bg-warning">
+            <h3 class="mb-0 text-dark">
+                <i class="fas fa-undo me-2"></i>
+                Solicitud de Reembolso #{{ refund.id }}
+            </h3>
+        </div>
+        <div class="detail-card-body">
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Estado</span>
+                    <span class="info-value">{{ refund.get_status_display }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Tipo</span>
+                    <span class="info-value">{{ refund.get_refund_type_display }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Monto a Reembolsar</span>
+                    <span class="info-value">${{ refund.final_refund_amount|floatformat:2 }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Motivo</span>
+                    <span class="info-value">{{ refund.get_reason_display }}</span>
+                </div>
+            </div>
+            {% if refund.customer_notes %}
+            <div class="mt-3">
+                <span class="info-label">Comentarios:</span>
+                <p class="mt-2">{{ refund.customer_notes }}</p>
+            </div>
+            {% endif %}
+            {% if refund.admin_notes %}
+            <div class="mt-3">
+                <span class="info-label">Respuesta del Administrador:</span>
+                <p class="mt-2">{{ refund.admin_notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Botones de Acción -->
+    <div class="d-flex gap-3 mb-4">
+        {% if can_request_refund %}
+            <a href="{% url 'request_refund' order.id %}" class="btn-refund">
+                <i class="fas fa-undo"></i>
+                {% if can_cancel %}
+                    Cancelar Pedido
+                {% elif requires_return %}
+                    Solicitar Devolución
+                {% endif %}
+            </a>
+        {% endif %}
+        
+        <a href="{% url 'order_history' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>
+            Volver a Mis Pedidos
+        </a>
+    </div>
+</div>
 
 {% endblock %}

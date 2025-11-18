@@ -1,0 +1,754 @@
+{% extends 'store/base.html' %}
+{% load static %}
+
+{% block title %}Procesar Reembolso #{{ refund.id }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .process-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .process-header {
+        background: linear-gradient(135deg, #6f42c1, #5a32a3);
+        color: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .info-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .info-card h4 {
+        color: #6f42c1;
+        border-bottom: 2px solid #e9ecef;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .status-timeline {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .timeline-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        position: relative;
+    }
+
+    .timeline-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .timeline-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        font-size: 16px;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .timeline-icon.completed { background: #28a745; }
+    .timeline-icon.current { background: #007bff; animation: pulse 2s infinite; }
+    .timeline-icon.pending { background: #6c757d; }
+
+    .timeline-content {
+        flex: 1;
+    }
+
+    .timeline-line {
+        position: absolute;
+        left: 19px;
+        top: 40px;
+        width: 2px;
+        height: calc(100% - 15px);
+        background: #e9ecef;
+    }
+
+    .timeline-item.completed .timeline-line {
+        background: #28a745;
+    }
+
+    .timeline-item.current .timeline-line {
+        background: linear-gradient(to bottom, #28a745 0%, #007bff 50%, #e9ecef 100%);
+    }
+
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(0, 123, 255, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(0, 123, 255, 0); }
+    }
+
+    .action-section {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+
+    .btn-action {
+        padding: 0.8rem 2rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-approve {
+        background: #28a745;
+        color: white;
+        border: none;
+    }
+
+    .btn-approve:hover {
+        background: #218838;
+        color: white;
+    }
+
+    .btn-reject {
+        background: #dc3545;
+        color: white;
+        border: none;
+    }
+
+    .btn-reject:hover {
+        background: #c82333;
+        color: white;
+    }
+
+    .btn-next-step {
+        background: #007bff;
+        color: white;
+        border: none;
+    }
+
+    .btn-next-step:hover {
+        background: #0056b3;
+        color: white;
+    }
+
+    .btn-complete {
+        background: #28a745;
+        color: white;
+        border: none;
+    }
+
+    .btn-complete:hover {
+        background: #218838;
+        color: white;
+    }
+
+    .product-list {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        padding: 1rem;
+    }
+
+    .product-item {
+        display: flex;
+        align-items: center;
+        padding: 0.8rem;
+        border-bottom: 1px solid #f8f9fa;
+        margin-bottom: 0.8rem;
+    }
+
+    .product-item:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+    }
+
+    .product-image {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-right: 1rem;
+    }
+
+    .status-badge {
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .status-pending { background: #fff3cd; color: #856404; }
+    .status-approved { background: #d4edda; color: #155724; }
+    .status-processing { background: #d1ecf1; color: #0c5460; }
+    .status-waiting_return { background: #ffeaa7; color: #6c5ce7; }
+    .status-product_received { background: #a8e6cf; color: #00b894; }
+    .status-quality_check { background: #fab1a0; color: #e17055; }
+    .status-completed { background: #00b894; color: white; }
+    .status-rejected { background: #ff7675; color: white; }
+
+    .notes-section {
+        margin-top: 2rem;
+    }
+
+    .notes-history {
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1rem;
+        background: #f8f9fa;
+    }
+
+    .note-item {
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .note-item:last-child {
+        margin-bottom: 0;
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .note-header {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.5rem;
+    }
+
+    .customer-note {
+        border-left: 4px solid #007bff;
+        padding-left: 1rem;
+    }
+
+    .admin-note {
+        border-left: 4px solid #28a745;
+        padding-left: 1rem;
+    }
+
+    .amount-summary {
+        background: #f8f9fa;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+    }
+
+    .amount-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+
+    .amount-row.total {
+        border-top: 2px solid #dee2e6;
+        padding-top: 0.5rem;
+        margin-top: 1rem;
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: #28a745;
+    }
+
+    .alert-warning {
+        border-left: 4px solid #ffc107;
+    }
+
+    .alert-info {
+        border-left: 4px solid #17a2b8;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="process-container">
+    <!-- Header -->
+    <div class="process-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2">
+                    <i class="fas fa-cogs me-2"></i>
+                    Procesar Reembolso #{{ refund.id }}
+                </h1>
+                <p class="mb-0">
+                    <strong>Pedido #{{ refund.order.id }}</strong> - 
+                    Cliente: {{ refund.order.customer.name }} - 
+                    <span class="status-badge status-{{ refund.status }}">
+                        {% if refund.status == 'pending' %}Pendiente
+                        {% elif refund.status == 'approved' %}Aprobado
+                        {% elif refund.status == 'processing' %}En Proceso
+                        {% elif refund.status == 'waiting_return' %}Esperando Retorno
+                        {% elif refund.status == 'product_received' %}Producto Recibido
+                        {% elif refund.status == 'quality_check' %}Verificación de Calidad
+                        {% elif refund.status == 'completed' %}Completado
+                        {% elif refund.status == 'rejected' %}Rechazado
+                        {% endif %}
+                    </span>
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <h3 class="mb-0">${{ refund.amount|floatformat:2 }}</h3>
+                <small>Monto del reembolso</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Information Grid -->
+    <div class="info-grid">
+        <!-- Información del Cliente -->
+        <div class="info-card">
+            <h4><i class="fas fa-user me-2"></i>Información del Cliente</h4>
+            <div class="row">
+                <div class="col-6">
+                    <strong>Nombre:</strong><br>
+                    {{ refund.order.customer.name }}
+                </div>
+                <div class="col-6">
+                    <strong>Email:</strong><br>
+                    {{ refund.order.customer.email }}
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-6">
+                    <strong>Teléfono:</strong><br>
+                    {{ refund.order.customer.phone_number|default:"No proporcionado" }}
+                </div>
+                <div class="col-6">
+                    <strong>Solicitud:</strong><br>
+                    {{ refund.created_at|date:"d/m/Y H:i" }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Información del Pedido -->
+        <div class="info-card">
+            <h4><i class="fas fa-shopping-cart me-2"></i>Información del Pedido</h4>
+            <div class="row">
+                <div class="col-6">
+                    <strong>Pedido #:</strong><br>
+                    {{ refund.order.id }}
+                </div>
+                <div class="col-6">
+                    <strong>Fecha:</strong><br>
+                    {{ refund.order.date_ordered|date:"d/m/Y" }}
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-6">
+                    <strong>Total:</strong><br>
+                    ${{ refund.order.get_cart_total_with_iva|floatformat:2 }}
+                </div>
+                <div class="col-6">
+                    <strong>Estado:</strong><br>
+                    {{ refund.order.complete|yesno:"Entregado,En proceso" }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Productos del Pedido -->
+    <div class="info-card">
+        <h4><i class="fas fa-box me-2"></i>Productos del Pedido</h4>
+        <div class="product-list">
+            {% for item in refund.order.orderitem_set.all %}
+            <div class="product-item">
+                {% if item.product.image %}
+                    <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="product-image">
+                {% else %}
+                    <div class="product-image bg-light d-flex align-items-center justify-content-center">
+                        <i class="fas fa-image text-muted"></i>
+                    </div>
+                {% endif %}
+                <div class="flex-grow-1">
+                    <strong>{{ item.product.name }}</strong><br>
+                    <small class="text-muted">
+                        Cantidad: {{ item.quantity }} × ${{ item.product.price|floatformat:2 }} = 
+                        ${{ item.get_total|floatformat:2 }}
+                    </small>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Timeline del Proceso -->
+    <div class="status-timeline">
+        <h4><i class="fas fa-history me-2"></i>Estado del Proceso</h4>
+        
+        <!-- Solicitud recibida -->
+        <div class="timeline-item completed">
+            <div class="timeline-icon completed">
+                <i class="fas fa-paper-plane"></i>
+            </div>
+            <div class="timeline-content">
+                <strong>Solicitud Recibida</strong><br>
+                <small class="text-muted">{{ refund.created_at|date:"d/m/Y H:i" }}</small>
+                <div class="timeline-line"></div>
+            </div>
+        </div>
+
+        <!-- Revisión pendiente/aprobada -->
+        <div class="timeline-item {% if refund.status == 'pending' %}current{% else %}completed{% endif %}">
+            <div class="timeline-icon {% if refund.status == 'pending' %}current{% else %}completed{% endif %}">
+                <i class="fas fa-search"></i>
+            </div>
+            <div class="timeline-content">
+                <strong>Revisión de Solicitud</strong><br>
+                <small class="text-muted">
+                    {% if refund.status != 'pending' %}
+                        Completado - {{ refund.processed_at|date:"d/m/Y H:i"|default:"Pendiente" }}
+                    {% else %}
+                        Pendiente de revisión
+                    {% endif %}
+                </small>
+                {% if refund.status != 'rejected' %}<div class="timeline-line"></div>{% endif %}
+            </div>
+        </div>
+
+        {% if refund.status != 'rejected' %}
+            {% if refund.refund_type == 'return_refund' %}
+                <!-- Esperando retorno del producto -->
+                <div class="timeline-item {% if refund.status == 'waiting_return' %}current{% elif refund.status in 'product_received,quality_check,completed' %}completed{% else %}pending{% endif %}">
+                    <div class="timeline-icon {% if refund.status == 'waiting_return' %}current{% elif refund.status in 'product_received,quality_check,completed' %}completed{% else %}pending{% endif %}">
+                        <i class="fas fa-truck"></i>
+                    </div>
+                    <div class="timeline-content">
+                        <strong>Recolección del Producto</strong><br>
+                        <small class="text-muted">
+                            {% if refund.status == 'waiting_return' %}
+                                Esperando que el cliente envíe el producto
+                            {% elif refund.status in 'product_received,quality_check,completed' %}
+                                Producto recibido
+                            {% else %}
+                                Pendiente
+                            {% endif %}
+                        </small>
+                        <div class="timeline-line"></div>
+                    </div>
+                </div>
+
+                <!-- Verificación de calidad -->
+                <div class="timeline-item {% if refund.status == 'quality_check' %}current{% elif refund.status == 'completed' %}completed{% else %}pending{% endif %}">
+                    <div class="timeline-icon {% if refund.status == 'quality_check' %}current{% elif refund.status == 'completed' %}completed{% else %}pending{% endif %}">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="timeline-content">
+                        <strong>Verificación de Calidad</strong><br>
+                        <small class="text-muted">
+                            {% if refund.status == 'quality_check' %}
+                                Verificando estado del producto
+                            {% elif refund.status == 'completed' %}
+                                Producto aprobado
+                            {% else %}
+                                Pendiente
+                            {% endif %}
+                        </small>
+                        <div class="timeline-line"></div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Reembolso procesado -->
+            <div class="timeline-item {% if refund.status == 'completed' %}completed{% else %}pending{% endif %}">
+                <div class="timeline-icon {% if refund.status == 'completed' %}completed{% else %}pending{% endif %}">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div class="timeline-content">
+                    <strong>Reembolso Procesado</strong><br>
+                    <small class="text-muted">
+                        {% if refund.status == 'completed' %}
+                            Completado - {{ refund.processed_at|date:"d/m/Y H:i" }}
+                        {% else %}
+                            Pendiente
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Notas y Motivo -->
+    <div class="info-card">
+        <h4><i class="fas fa-comments me-2"></i>Notas y Comunicación</h4>
+        
+        <div class="notes-history">
+            <!-- Motivo del cliente -->
+            <div class="note-item customer-note">
+                <div class="note-header">
+                    <i class="fas fa-user me-1"></i>Cliente - {{ refund.created_at|date:"d/m/Y H:i" }}
+                </div>
+                <strong>Motivo:</strong> {{ refund.get_reason_display }}<br>
+                {% if refund.customer_notes %}
+                    <strong>Comentarios:</strong> {{ refund.customer_notes }}
+                {% endif %}
+            </div>
+
+            <!-- Notas del admin si existen -->
+            {% if refund.admin_notes %}
+            <div class="note-item admin-note">
+                <div class="note-header">
+                    <i class="fas fa-user-tie me-1"></i>Administrador - {{ refund.processed_at|date:"d/m/Y H:i" }}
+                </div>
+                {{ refund.admin_notes }}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Agregar nota del admin -->
+        <div class="notes-section">
+            <form method="post">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-8">
+                        <label class="form-label">Agregar nota administrativa:</label>
+                        <textarea name="admin_notes" class="form-control" rows="3" 
+                            placeholder="Añade comentarios sobre el proceso, verificaciones realizadas, etc.">{{ refund.admin_notes }}</textarea>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" name="action" value="update_notes" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-save me-2"></i>Guardar Notas
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Resumen de Montos -->
+    <div class="info-card">
+        <h4><i class="fas fa-calculator me-2"></i>Resumen Financiero</h4>
+        <div class="amount-summary">
+            <div class="amount-row">
+                <span>Total del pedido:</span>
+                <span>${{ refund.order.get_cart_total_with_iva|floatformat:2 }}</span>
+            </div>
+            {% if refund.refund_type == 'return_refund' %}
+            <div class="amount-row">
+                <span>Comisión por devolución (5%):</span>
+                <span>-${{ refund.order.get_cart_total_with_iva|floatformat:2|mul:0.05|floatformat:2 }}</span>
+            </div>
+            {% endif %}
+            <div class="amount-row total">
+                <span>Monto del reembolso:</span>
+                <span>${{ refund.amount|floatformat:2 }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Acciones según el estado -->
+    <div class="action-section">
+        <h4><i class="fas fa-tasks me-2"></i>Acciones Disponibles</h4>
+        
+        {% if refund.status == 'pending' %}
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Acción requerida:</strong> Esta solicitud está pendiente de revisión. 
+                Puedes aprobarla o rechazarla después de verificar los detalles.
+            </div>
+            
+            <form method="post" class="d-inline">
+                {% csrf_token %}
+                <div class="action-buttons">
+                    <button type="submit" name="action" value="approve" class="btn-action btn-approve"
+                        onclick="return confirm('¿Confirmas que deseas APROBAR este reembolso?')">
+                        <i class="fas fa-check"></i>Aprobar Reembolso
+                    </button>
+                    <button type="submit" name="action" value="reject" class="btn-action btn-reject"
+                        onclick="return confirm('¿Confirmas que deseas RECHAZAR este reembolso?')">
+                        <i class="fas fa-times"></i>Rechazar Solicitud
+                    </button>
+                </div>
+            </form>
+
+        {% elif refund.status == 'approved' and refund.refund_type == 'cancellation' %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Cancelación aprobada:</strong> Este pedido puede ser completado inmediatamente 
+                ya que es una cancelación simple.
+            </div>
+            
+            <form method="post" class="d-inline">
+                {% csrf_token %}
+                <div class="action-buttons">
+                    <button type="submit" name="action" value="complete" class="btn-action btn-complete"
+                        onclick="return confirm('¿Confirmas que deseas COMPLETAR este reembolso? Esta acción no se puede deshacer.')">
+                        <i class="fas fa-check-double"></i>Completar Reembolso
+                    </button>
+                </div>
+            </form>
+
+        {% elif refund.status == 'approved' and refund.refund_type == 'return_refund' %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Devolución aprobada:</strong> Ahora debemos esperar a que el cliente envíe el producto 
+                para poder continuar con el proceso.
+            </div>
+            
+            <form method="post" class="d-inline">
+                {% csrf_token %}
+                <div class="action-buttons">
+                    <button type="submit" name="action" value="waiting_return" class="btn-action btn-next-step"
+                        onclick="return confirm('¿Confirmas que el cliente ha sido notificado para enviar el producto?')">
+                        <i class="fas fa-truck"></i>Notificar Cliente - Esperando Retorno
+                    </button>
+                </div>
+            </form>
+
+        {% elif refund.status == 'waiting_return' %}
+            <div class="alert alert-warning">
+                <i class="fas fa-clock me-2"></i>
+                <strong>Esperando producto:</strong> El cliente debe enviar el producto. 
+                Cuando lo recibas, marca como "Producto Recibido".
+            </div>
+            
+            <form method="post" class="d-inline">
+                {% csrf_token %}
+                <div class="action-buttons">
+                    <button type="submit" name="action" value="product_received" class="btn-action btn-next-step"
+                        onclick="return confirm('¿Confirmas que el producto ha sido recibido y está listo para verificación?')">
+                        <i class="fas fa-box-open"></i>Producto Recibido
+                    </button>
+                </div>
+            </form>
+
+        {% elif refund.status == 'product_received' %}
+            <div class="alert alert-info">
+                <i class="fas fa-search me-2"></i>
+                <strong>Verificación pendiente:</strong> El producto ha sido recibido. 
+                Procede con la verificación de calidad.
+            </div>
+            
+            <form method="post" class="d-inline">
+                {% csrf_token %}
+                <div class="action-buttons">
+                    <button type="submit" name="action" value="quality_check" class="btn-action btn-next-step"
+                        onclick="return confirm('¿Confirmas que vas a iniciar la verificación de calidad?')">
+                        <i class="fas fa-search"></i>Iniciar Verificación
+                    </button>
+                </div>
+            </form>
+
+        {% elif refund.status == 'quality_check' %}
+            <div class="alert alert-warning">
+                <i class="fas fa-clipboard-check me-2"></i>
+                <strong>Verificación en curso:</strong> Revisa el estado del producto. 
+                Si está en buen estado, procede con el reembolso. Si no, puedes rechazarlo.
+            </div>
+            
+            <form method="post" class="d-inline">
+                {% csrf_token %}
+                <div class="action-buttons">
+                    <button type="submit" name="action" value="complete" class="btn-action btn-complete"
+                        onclick="return confirm('¿Confirmas que el producto está en buen estado y deseas COMPLETAR el reembolso?')">
+                        <i class="fas fa-check-double"></i>Producto OK - Completar Reembolso
+                    </button>
+                    <button type="submit" name="action" value="reject" class="btn-action btn-reject"
+                        onclick="return confirm('¿Confirmas que el producto NO está en buen estado y deseas RECHAZAR el reembolso?')">
+                        <i class="fas fa-times"></i>Producto Dañado - Rechazar
+                    </button>
+                </div>
+            </form>
+
+        {% elif refund.status == 'completed' %}
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>Reembolso completado:</strong> Este reembolso ha sido procesado exitosamente el 
+                {{ refund.processed_at|date:"d/m/Y" }} a las {{ refund.processed_at|time:"H:i" }}.
+            </div>
+
+        {% elif refund.status == 'rejected' %}
+            <div class="alert alert-danger">
+                <i class="fas fa-times-circle me-2"></i>
+                <strong>Solicitud rechazada:</strong> Este reembolso fue rechazado el 
+                {{ refund.processed_at|date:"d/m/Y" }} a las {{ refund.processed_at|time:"H:i" }}.
+            </div>
+        {% endif %}
+
+        <!-- Botón para volver -->
+        <div class="text-center mt-4">
+            <a href="{% url 'admin_refunds_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Volver al Panel de Reembolsos
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+// Confirmaciones más específicas según el tipo de acción
+document.querySelectorAll('button[name="action"]').forEach(button => {
+    button.addEventListener('click', function(e) {
+        const action = this.value;
+        let message = '';
+        
+        switch(action) {
+            case 'approve':
+                message = '¿Estás seguro de que deseas APROBAR este reembolso?\n\nEsta acción iniciará el proceso de devolución.';
+                break;
+            case 'reject':
+                message = '¿Estás seguro de que deseas RECHAZAR este reembolso?\n\nEl cliente será notificado automáticamente.';
+                break;
+            case 'complete':
+                message = '¿Confirmas que deseas COMPLETAR este reembolso?\n\nEsta acción procesará el pago y no se puede deshacer.';
+                break;
+            case 'waiting_return':
+                message = '¿Confirmas que el cliente ha sido contactado?\n\nSe marcará como "Esperando Retorno del Producto".';
+                break;
+            case 'product_received':
+                message = '¿Confirmas que el producto ha sido recibido?\n\nSe iniciará el proceso de verificación de calidad.';
+                break;
+            case 'quality_check':
+                message = '¿Iniciar la verificación de calidad?\n\nRevisa que el producto esté en perfecto estado.';
+                break;
+        }
+        
+        if (message && !confirm(message)) {
+            e.preventDefault();
+        }
+    });
+});
+
+// Auto-save para las notas del administrador
+let notesTimeout;
+document.querySelector('textarea[name="admin_notes"]').addEventListener('input', function() {
+    clearTimeout(notesTimeout);
+    notesTimeout = setTimeout(() => {
+        // Aquí podrías implementar auto-save vía AJAX
+        console.log('Auto-saving notes...');
+    }, 2000);
+});
+</script>
+
+{% endblock %}

@@ -5,9 +5,10 @@ from django.http import HttpResponseForbidden, JsonResponse
 import json
 import datetime
 from django.utils import timezone
+from decimal import Decimal
 from .models import * 
 from .utils import cookieCart, cartData, guestOrder
-from .forms import ProductEditForm, SignupForm, LoginForm
+from .forms import ProductEditForm, SignupForm, LoginForm, CustomerAddressForm
 from django.contrib.auth import logout as auth_logout
 import openai
 import os
@@ -19,7 +20,6 @@ from .forms import ProductForm, CustomerForm, OrderUpdateForm
 from django.db.models.signals import post_save
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
-from django.views.decorators.csrf import csrf_exempt
 import urllib.request
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.http import require_POST
@@ -28,9 +28,17 @@ from django.views.decorators.http import require_POST
 # Create your views here.
 # Home page
 def index(request):
-    """Página principal con productos destacados"""
+    """Página principal con carrusel y productos destacados"""
     data = cartData(request)
     cartItems = data['cartItems']
+    
+    # Obtener slides activos del carrusel
+    carousel_slides = CarouselSlide.objects.filter(
+        is_active=True
+    ).order_by('order', '-created_at')
+    
+    # Filtrar slides visibles basado en fechas programadas
+    visible_slides = [slide for slide in carousel_slides if slide.is_visible]
     
     # Obtener productos destacados (puedes filtrar por ofertas, más vendidos, etc.)
     products_destacados = Product.objects.filter(
@@ -38,6 +46,7 @@ def index(request):
     ).order_by('-id')[:8]  # Los 8 productos más recientes
     
     context = {
+        'carousel_slides': visible_slides,
         'products_destacados': products_destacados,
         'cartItems': cartItems
     }
@@ -503,50 +512,199 @@ def checkout(request):
         messages.error(request, 'Tu carrito está vacío.')
         return redirect('cart')
 
+    # Obtener direcciones del cliente
+    customer_addresses = customer.addresses.all()
+    address_form = CustomerAddressForm(customer=customer)
+    
+    # Si no tiene direcciones, crear una dirección temporal basada en su perfil
+    if not customer_addresses.exists() and customer.address:
+        # Crear una dirección por defecto desde los datos del cliente
+        default_address = CustomerAddress.objects.create(
+            customer=customer,
+            nickname="Mi Casa",
+            full_name=customer.name or customer.user.get_full_name() or customer.user.username,
+            phone=customer.phone_number or "",
+            address=customer.address,
+            city=customer.municipality or "",
+            state=customer.state or "NLE",
+            zipcode=customer.zip_code or "",
+            references=customer.referencias or "",
+            is_default=True
+        )
+        customer_addresses = customer.addresses.all()
+
     if request.method == 'POST':
         try:
-            # Debug: Verificar qué datos llegan
-            print(f"DEBUG - Procesando pago para orden {order.id}")
-            print(f"DEBUG - Estado actual: {order.status}")
-            print(f"DEBUG - Complete actual: {order.complete}")
-            
-            # Guardar método de pago
-            payment_method = request.POST.get('payment_method')
-            if payment_method:
-                order.payment_method = payment_method
-                print(f"DEBUG - Método de pago: {payment_method}")
+            # Check if it's an AJAX request with JSON data
+            if request.content_type == 'application/json':
+                import json
+                data = json.loads(request.body)
+                form_data = data.get('form', {})
+                shipping_data = data.get('shipping', {})
+                
+                # Debug: Verificar qué datos llegan
+                print(f"DEBUG - Procesando pago AJAX para orden {order.id}")
+                print(f"DEBUG - Form data: {form_data}")
+                print(f"DEBUG - Shipping data: {shipping_data}")
+                
+                # Obtener dirección seleccionada o crear nueva
+                selected_address_id = shipping_data.get('selected_address')
+                use_new_address = shipping_data.get('use_new_address', False)
+                shipping_address = None
+                
+                if use_new_address:
+                    # Crear nueva dirección desde datos AJAX
+                    address_data = {
+                        'nickname': shipping_data.get('nickname', ''),
+                        'full_name': shipping_data.get('full_name', ''),
+                        'phone': shipping_data.get('phone', ''),
+                        'address': shipping_data.get('address', ''),
+                        'neighborhood': shipping_data.get('neighborhood', ''),
+                        'city': shipping_data.get('city', ''),
+                        'state': shipping_data.get('state', ''),
+                        'zipcode': shipping_data.get('zipcode', ''),
+                        'references': shipping_data.get('references', ''),
+                        'is_default': shipping_data.get('is_default', False),
+                    }
+                    address_form = CustomerAddressForm(address_data, customer=customer)
+                    if address_form.is_valid():
+                        new_address = address_form.save()
+                        shipping_address = new_address
+                    else:
+                        return JsonResponse({
+                            'status': 'error',
+                            'message': 'Error en los datos de la nueva dirección.',
+                            'errors': address_form.errors
+                        })
+                elif selected_address_id:
+                    # Usar dirección existente
+                    try:
+                        shipping_address = customer.addresses.get(id=selected_address_id)
+                    except CustomerAddress.DoesNotExist:
+                        return JsonResponse({
+                            'status': 'error',
+                            'message': 'Dirección seleccionada no válida.'
+                        })
+                
+                if not shipping_address:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': 'Debes seleccionar una dirección de envío.'
+                    })
+                
+                # Guardar método de pago
+                payment_method = form_data.get('payment_method', 'bank-transfer')
+            else:
+                # Traditional form submission (fallback)
+                print(f"DEBUG - Procesando pago tradicional para orden {order.id}")
+                
+                # Obtener dirección seleccionada o crear nueva
+                selected_address_id = request.POST.get('selected_address')
+                use_new_address = request.POST.get('use_new_address')
+                shipping_address = None
+                
+                if use_new_address == 'on':
+                    # Crear nueva dirección
+                    address_form = CustomerAddressForm(request.POST, customer=customer)
+                    if address_form.is_valid():
+                        new_address = address_form.save()
+                        shipping_address = new_address
+                    else:
+                        messages.error(request, 'Error en los datos de la nueva dirección.')
+                        context = {
+                            'items': items,
+                            'order': order,
+                            'cartItems': cartItems,
+                            'customer': customer,
+                            'customer_addresses': customer_addresses,
+                            'address_form': address_form,
+                        }
+                        return render(request, 'store/checkout.html', context)
+                elif selected_address_id:
+                    # Usar dirección existente
+                    shipping_address = customer.addresses.get(id=selected_address_id)
+                
+                if not shipping_address:
+                    messages.error(request, 'Debes seleccionar una dirección de envío.')
+                    context = {
+                        'items': items,
+                        'order': order,
+                        'cartItems': cartItems,
+                        'customer': customer,
+                        'customer_addresses': customer_addresses,
+                        'address_form': address_form,
+                    }
+                    return render(request, 'store/checkout.html', context)
+                
+                # Guardar método de pago
+                payment_method = request.POST.get('payment_method', 'bank-transfer')
             
             # Actualizar orden actual - SIMULAR PAGO EFECTUADO
             order.complete = True
             order.status = "Procesando"  # PAGO CONFIRMADO - PREPARANDO ENVÍO
+            
+            # Generar ID de transacción si no existe
+            if not order.transaction_id:
+                import uuid
+                order.transaction_id = str(uuid.uuid4())[:8].upper()
+            
             order.save()
             
-            print(f"DEBUG - Nuevo estado: {order.status}")
-            print(f"DEBUG - Nuevo complete: {order.complete}")
-            
-            # Crear historial
-            OrderHistory.objects.create(user=request.user, order=order)
-            
-            # IMPORTANTE: Crear una nueva orden vacía para el siguiente carrito
-            # Esto asegura que cada compra sea independiente
-            new_order = Order.objects.create(
+            # Crear shipping address para este pedido
+            ShippingAddress.objects.create(
                 customer=customer,
-                complete=False,
-                status="Pendiente"
+                order=order,
+                customer_address=shipping_address,
+                name=shipping_address.full_name,
+                phone=shipping_address.phone,
+                address=shipping_address.address,
+                city=shipping_address.city,
+                state=shipping_address.get_state_display(),
+                zipcode=shipping_address.zipcode,
             )
             
-            messages.success(request, f'¡Pago realizado con éxito! Tu pedido #{order.id} está siendo preparado para envío.')
-            return redirect('order_history')
+            # Crear historial - PAGO SIMULADO SIEMPRE EXITOSO
+            OrderHistory.objects.create(
+                user=request.user, 
+                customer=customer,
+                order=order,
+                status='processing',  # PAGO CONFIRMADO - No pendiente
+                payment_method=payment_method
+            )
+            
+            # NOTA: No crear nueva orden aquí - se creará automáticamente cuando
+            # el usuario agregue el primer item al carrito en la próxima sesión
+            
+            # Return appropriate response based on request type
+            if request.content_type == 'application/json':
+                return JsonResponse({
+                    'status': 'success',
+                    'message': f'¡Pago realizado con éxito! Tu pedido #{order.id} será enviado a {shipping_address.nickname}.',
+                    'order_id': order.id,
+                    'payment_method': payment_method,
+                    'shipping_address': shipping_address.nickname
+                })
+            else:
+                messages.success(request, f'¡Pago realizado con éxito! Tu pedido #{order.id} será enviado a {shipping_address.nickname}.')
+                return redirect('order_history')
             
         except Exception as e:
-            messages.error(request, f'Ocurrió un error al procesar el pago: {e}')
-            return redirect('checkout')
+            if request.content_type == 'application/json':
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'Ocurrió un error al procesar el pago: {e}'
+                })
+            else:
+                messages.error(request, f'Ocurrió un error al procesar el pago: {e}')
+                return redirect('checkout')
         
     context = {
         'items': items,
         'order': order,
         'cartItems': cartItems,
         'customer': customer,
+        'customer_addresses': customer_addresses,
+        'address_form': address_form,
     }
     return render(request, 'store/checkout.html', context)
 
@@ -565,7 +723,17 @@ def updateItem(request):
             return JsonResponse({'error': 'No customer associated with this user.'}, status=400)
 
         product = Product.objects.get(id=productId)
-        order, created = Order.objects.get_or_create(customer=customer, complete=False)
+        
+        # Buscar orden activa existente
+        order = Order.objects.filter(customer=customer, complete=False).first()
+        
+        # Solo crear nueva orden si se está agregando un item y no hay orden activa
+        if not order and action == 'add':
+            order = Order.objects.create(customer=customer, complete=False, status='Pendiente')
+        elif not order and action == 'remove':
+            # No hay orden activa y se intenta remover, no hacer nada
+            return JsonResponse({'message': 'No active order to remove from', 'quantity': 0}, status=200)
+        
         orderItem, created = OrderItem.objects.get_or_create(order=order, product=product)
 
         if action == 'add':
@@ -577,6 +745,10 @@ def updateItem(request):
 
         if orderItem.quantity <= 0:
             orderItem.delete()
+            # Si no quedan items en la orden, eliminar la orden vacía
+            if not order.orderitem_set.exists():
+                order.delete()
+                return JsonResponse({'message': 'Order deleted as it became empty', 'quantity': 0}, status=200)
 
         # Devuelve una respuesta JSON indicando que la actualización se realizó correctamente
         return JsonResponse({'message': 'Item was updated', 'quantity': orderItem.quantity}, status=200)
@@ -695,18 +867,6 @@ def delete_product(request, product_id):
 
 
 # Vista de detalles del pedido
-@login_required
-def order_detail(request, order_id):
-    order = get_object_or_404(Order, id=order_id)
-    data = cartData(request)
-    cartItems = data['cartItems']
-
-    # Permitir solo al administrador o al dueño del pedido ver los detalles
-    if not request.user.is_staff and order.customer.user != request.user:
-        return HttpResponseForbidden("No tienes permiso para ver este pedido.")
-
-    return render(request, 'store/order_detail.html', {'order': order, 'cartItems': cartItems})
-
 # Vista de detalles del producto
 def product_detail(request, pk):
     product = get_object_or_404(Product, pk=pk)
@@ -946,8 +1106,8 @@ def admin_update_order_status(request):
         order_history_id = data.get('order_history_id')
         new_status = data.get('status')
         
-        # Validar que el estado es válido
-        valid_statuses = ['Pendiente', 'Procesando', 'Enviado', 'Entregado', 'Cancelado']
+        # Validar que el estado es válido (códigos del modelo OrderHistory)
+        valid_statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled']
         if new_status not in valid_statuses:
             return JsonResponse({'success': False, 'error': 'Estado no válido'})
         
@@ -958,18 +1118,21 @@ def admin_update_order_status(request):
         order_history.status = new_status
         order_history.save()
         
-        # También actualizar el estado de la orden si es necesario
-        if new_status == 'Entregado':
+        # También actualizar el estado de la orden (usando los estados del modelo Order)
+        status_mapping = {
+            'pending': 'Pendiente',
+            'processing': 'Procesando', 
+            'shipped': 'Enviado',
+            'delivered': 'Entregado',
+            'cancelled': 'Cancelado'
+        }
+        
+        order_history.order.status = status_mapping[new_status]
+        if new_status == 'delivered':
             order_history.order.complete = True
-            order_history.order.status = 'Entregado'
-            order_history.order.save()
-        elif new_status == 'Cancelado':
+        elif new_status == 'cancelled':
             order_history.order.complete = False
-            order_history.order.status = 'Cancelado'
-            order_history.order.save()
-        else:
-            order_history.order.status = new_status
-            order_history.order.save()
+        order_history.order.save()
         
         return JsonResponse({
             'success': True, 
@@ -1046,3 +1209,328 @@ def custom_admin_index(request):
     }
     
     return render(request, 'admin/index.html', context)
+
+
+# Vistas para gestión de direcciones del cliente
+@login_required
+def customer_addresses(request):
+    """Vista para mostrar todas las direcciones del cliente"""
+    data = cartData(request)
+    customer = request.user.customer
+    addresses = customer.addresses.all()
+    
+    context = {
+        'cartItems': data['cartItems'],
+        'addresses': addresses,
+        'customer': customer,
+    }
+    return render(request, 'store/customer_addresses.html', context)
+
+@login_required
+def add_address(request):
+    """Vista para agregar una nueva dirección"""
+    data = cartData(request)
+    customer = request.user.customer
+    
+    if request.method == 'POST':
+        form = CustomerAddressForm(request.POST, customer=customer)
+        if form.is_valid():
+            address = form.save()
+            messages.success(request, f'Dirección "{address.nickname}" agregada correctamente.')
+            return redirect('customer_addresses')
+    else:
+        form = CustomerAddressForm(customer=customer)
+    
+    context = {
+        'cartItems': data['cartItems'],
+        'form': form,
+        'title': 'Agregar Dirección',
+    }
+    return render(request, 'store/address_form.html', context)
+
+@login_required
+def edit_address(request, address_id):
+    """Vista para editar una dirección existente"""
+    data = cartData(request)
+    customer = request.user.customer
+    address = get_object_or_404(CustomerAddress, id=address_id, customer=customer)
+    
+    if request.method == 'POST':
+        form = CustomerAddressForm(request.POST, instance=address, customer=customer)
+        if form.is_valid():
+            address = form.save()
+            messages.success(request, f'Dirección "{address.nickname}" actualizada correctamente.')
+            return redirect('customer_addresses')
+    else:
+        form = CustomerAddressForm(instance=address, customer=customer)
+    
+    context = {
+        'cartItems': data['cartItems'],
+        'form': form,
+        'address': address,
+        'title': 'Editar Dirección',
+    }
+    return render(request, 'store/address_form.html', context)
+
+@login_required
+def delete_address(request, address_id):
+    """Vista para eliminar una dirección"""
+    customer = request.user.customer
+    address = get_object_or_404(CustomerAddress, id=address_id, customer=customer)
+    
+    # No permitir eliminar si es la única dirección
+    if customer.addresses.count() <= 1:
+        messages.error(request, 'No puedes eliminar tu única dirección registrada.')
+        return redirect('customer_addresses')
+    
+    if request.method == 'POST':
+        nickname = address.nickname
+        address.delete()
+        messages.success(request, f'Dirección "{nickname}" eliminada correctamente.')
+        return redirect('customer_addresses')
+    
+    data = cartData(request)
+    context = {
+        'cartItems': data['cartItems'],
+        'address': address,
+    }
+    return render(request, 'store/confirm_delete_address.html', context)
+
+@login_required
+def set_default_address(request, address_id):
+    """Vista para establecer una dirección como principal"""
+    customer = request.user.customer
+    address = get_object_or_404(CustomerAddress, id=address_id, customer=customer)
+    
+    # Quitar el default de todas las direcciones del cliente
+    customer.addresses.update(is_default=False)
+    # Establecer esta como default
+    address.is_default = True
+    address.save()
+    
+    messages.success(request, f'"{address.nickname}" establecida como dirección principal.')
+    return redirect('customer_addresses')
+
+# ===== VISTAS PARA DETALLES DE PEDIDO Y REEMBOLSOS =====
+
+@login_required
+def order_detail(request, order_id):
+    """Vista detallada de un pedido específico"""
+    try:
+        customer = request.user.customer
+        order = get_object_or_404(Order, id=order_id, customer=customer)
+        order_history = OrderHistory.objects.filter(order=order).first()
+        shipping_address = ShippingAddress.objects.filter(order=order).first()
+        refund = getattr(order, 'refund', None)  # Verificar si existe reembolso
+        
+        # Determinar si se puede cancelar/reembolsar
+        can_request_refund = order.complete and not refund
+        can_cancel = order.status in ['Pendiente', 'Procesando'] and not refund
+        requires_return = order.status in ['Enviado', 'Entregado']
+        
+        data = cartData(request)
+        context = {
+            'cartItems': data['cartItems'],
+            'order': order,
+            'order_history': order_history,
+            'shipping_address': shipping_address,
+            'refund': refund,
+            'can_request_refund': can_request_refund,
+            'can_cancel': can_cancel,
+            'requires_return': requires_return,
+        }
+        return render(request, 'store/order_detail.html', context)
+        
+    except Customer.DoesNotExist:
+        messages.error(request, 'No tienes permisos para ver este pedido.')
+        return redirect('order_history')
+
+@login_required
+def request_refund(request, order_id):
+    """Vista para solicitar reembolso/cancelación"""
+    try:
+        customer = request.user.customer
+        order = get_object_or_404(Order, id=order_id, customer=customer)
+        
+        # Verificar que no tenga ya un reembolso
+        if hasattr(order, 'refund'):
+            messages.error(request, 'Este pedido ya tiene una solicitud de reembolso.')
+            return redirect('order_detail', order_id=order_id)
+        
+        if request.method == 'POST':
+            reason = request.POST.get('reason')
+            customer_notes = request.POST.get('customer_notes', '')
+            
+            # Determinar tipo de reembolso basado en el estado del pedido
+            if order.status in ['Pendiente', 'Procesando']:
+                refund_type = 'cancellation'
+            else:
+                refund_type = 'return_refund'
+            
+            # Calcular montos antes de crear el reembolso
+            base_amount = Decimal(str(order.get_cart_total_with_iva))
+            
+            if refund_type == 'cancellation':
+                # Cancelación simple - reembolso completo
+                refund_fee = Decimal('0.00')
+                final_refund_amount = base_amount
+            else:
+                # Devolución con retorno - comisión del 5%
+                fee_percentage = Decimal('0.05')
+                refund_fee = base_amount * fee_percentage
+                final_refund_amount = base_amount - refund_fee
+            
+            # Crear solicitud de reembolso
+            refund = Refund.objects.create(
+                order=order,
+                customer=customer,
+                refund_type=refund_type,
+                reason=reason,
+                customer_notes=customer_notes,
+                status='pending',
+                refund_amount=base_amount,
+                refund_fee=refund_fee,
+                final_refund_amount=final_refund_amount
+            )
+            
+            # Establecer fecha límite para devolución si es necesario
+            if refund_type == 'return_refund':
+                from django.utils import timezone
+                from datetime import timedelta
+                refund.return_deadline = timezone.now() + timedelta(days=15)
+                refund.save()
+            
+            # Cambiar estado de la orden
+            order.status = 'Cancelado' if refund_type == 'cancellation' else order.status
+            order.save()
+            
+            # Actualizar OrderHistory
+            order_history = OrderHistory.objects.filter(order=order).first()
+            if order_history:
+                order_history.status = 'cancelled' if refund_type == 'cancellation' else order_history.status
+                order_history.save()
+            
+            # Crear notificación
+            Notification.objects.create(
+                user=request.user,
+                message=f'Solicitud de reembolso creada para el pedido #{order.id}'
+            )
+            
+            messages.success(request, 'Solicitud de reembolso enviada correctamente. Te contactaremos pronto.')
+            return redirect('order_detail', order_id=order_id)
+        
+        # GET request - mostrar formulario
+        data = cartData(request)
+        context = {
+            'cartItems': data['cartItems'],
+            'order': order,
+            'can_cancel': order.status in ['Pendiente', 'Procesando'],
+            'requires_return': order.status in ['Enviado', 'Entregado'],
+        }
+        return render(request, 'store/request_refund.html', context)
+        
+    except Customer.DoesNotExist:
+        messages.error(request, 'No tienes permisos para hacer esta solicitud.')
+        return redirect('order_history')
+
+@staff_member_required  
+def admin_refunds_list(request):
+    """Vista administrativa para gestionar reembolsos"""
+    refunds = Refund.objects.all().select_related('order', 'order__customer').order_by('-created_at')
+    
+    # Calcular estadísticas
+    stats = {
+        'pending': refunds.filter(status='pending').count(),
+        'approved': refunds.filter(status='approved').count(),
+        'processing': refunds.filter(status__in=['processing', 'waiting_return', 'product_received', 'quality_check']).count(),
+        'waiting_return': refunds.filter(status='waiting_return').count(),
+    }
+    
+    # Filtros
+    status_filter = request.GET.get('status')
+    refund_type_filter = request.GET.get('refund_type')
+    sort_by = request.GET.get('sort', '-created_at')
+    
+    if status_filter:
+        refunds = refunds.filter(status=status_filter)
+    
+    if refund_type_filter:
+        refunds = refunds.filter(refund_type=refund_type_filter)
+    
+    if sort_by:
+        refunds = refunds.order_by(sort_by)
+    
+    # Paginación
+    from django.core.paginator import Paginator
+    paginator = Paginator(refunds, 20)
+    page_number = request.GET.get('page')
+    refunds = paginator.get_page(page_number)
+    
+    context = {
+        'refunds': refunds,
+        'stats': stats,
+        'status_choices': Refund.REFUND_STATUS_CHOICES,
+    }
+    return render(request, 'store/admin_refunds.html', context)
+
+@staff_member_required
+def process_refund(request, refund_id):
+    """Vista para procesar un reembolso desde el admin"""
+    refund = get_object_or_404(Refund, id=refund_id)
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        admin_notes = request.POST.get('admin_notes', '')
+        
+        if action == 'approve':
+            refund.status = 'approved'
+            refund.admin_notes = admin_notes
+            refund.processed_by = request.user
+            refund.processed_at = timezone.now()
+            
+            # Si es cancelación simple, marcar como completado inmediatamente
+            if refund.refund_type == 'cancellation':
+                refund.status = 'completed'
+                refund.completed_at = timezone.now()
+        
+        elif action == 'reject':
+            refund.status = 'rejected'
+            refund.admin_notes = admin_notes
+            refund.processed_by = request.user
+            refund.processed_at = timezone.now()
+            
+            # Restaurar estado de la orden si fue cancelada
+            if refund.order.status == 'Cancelado':
+                refund.order.status = 'Procesando'
+                refund.order.save()
+        
+        elif action == 'mark_received':
+            if refund.refund_type == 'return_refund':
+                refund.status = 'product_received'
+                refund.product_returned_at = timezone.now()
+        
+        elif action == 'quality_ok':
+            refund.quality_approved = True
+            refund.status = 'completed'
+            refund.completed_at = timezone.now()
+            
+        elif action == 'quality_fail':
+            refund.quality_approved = False
+            refund.status = 'rejected'
+            refund.admin_notes += f" | Producto no aprobó control de calidad: {admin_notes}"
+        
+        refund.save()
+        
+        # Crear notificación para el cliente
+        Notification.objects.create(
+            user=refund.customer.user,
+            message=f'Actualización en tu solicitud de reembolso para el pedido #{refund.order.id}'
+        )
+        
+        messages.success(request, f'Reembolso #{refund.id} actualizado correctamente.')
+        return redirect('admin_refunds_list')
+    
+    context = {
+        'refund': refund,
+    }
+    return render(request, 'store/process_refund.html', context)

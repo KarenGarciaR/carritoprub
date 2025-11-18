@@ -26,7 +26,6 @@ urlpatterns = [
     path('personalizaciones/atender/<int:pk>/', views.atender_personalizacion, name='atender_personalizacion'),
     path('edit_product/<int:product_id>/', views.edit_product, name='edit_product'),
     path('delete_product/<int:product_id>/', views.delete_product, name='delete_product'),
-    path('order/<int:order_id>/', views.order_detail, name='order_detail'),
     path('product/<int:pk>/', views.product_detail, name='product_detail'),
     path('product/<int:pk>/add_comment/', views.add_comment, name='add_comment'),
     path('product/<int:pk>/like/', views.like_product, name='like_product'),
@@ -40,6 +39,21 @@ urlpatterns = [
     path('admin/update-order-status/', views.admin_update_order_status, name='admin_update_order_status'),
     path('admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('admin/custom/', views.custom_admin_index, name='custom_admin_index'),
+    
+    # URLs para gestión de direcciones
+    path('addresses/', views.customer_addresses, name='customer_addresses'),
+    path('addresses/add/', views.add_address, name='add_address'),
+    path('addresses/<int:address_id>/edit/', views.edit_address, name='edit_address'),
+    path('addresses/<int:address_id>/delete/', views.delete_address, name='delete_address'),
+    path('addresses/<int:address_id>/set-default/', views.set_default_address, name='set_default_address'),
+    
+    # URLs para detalles de pedido y reembolsos
+    path('order/<int:order_id>/detail/', views.order_detail, name='order_detail'),
+    path('order/<int:order_id>/refund/', views.request_refund, name='request_refund'),
+    
+    # URLs administrativas para reembolsos
+    path('admin/refunds/', views.admin_refunds_list, name='admin_refunds_list'),
+    path('admin/refunds/<int:refund_id>/process/', views.process_refund, name='process_refund'),
 ]
 
 if settings.DEBUG:

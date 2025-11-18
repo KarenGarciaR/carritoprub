@@ -1,0 +1,435 @@
+{% extends 'store/base.html' %}
+{% load static %}
+
+{% block title %}Administrar Reembolsos{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #6f42c1, #5a32a3);
+        color: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        font-size: 24px;
+        color: white;
+    }
+
+    .stat-icon.pending { background: #ffc107; }
+    .stat-icon.approved { background: #28a745; }
+    .stat-icon.processing { background: #17a2b8; }
+    .stat-icon.waiting { background: #fd7e14; }
+
+    .filters-section {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .refund-table {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .refund-row {
+        border-bottom: 1px solid #e9ecef;
+        transition: background-color 0.2s;
+    }
+
+    .refund-row:hover {
+        background-color: #f8f9fa;
+    }
+
+    .status-badge {
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .status-pending { background: #fff3cd; color: #856404; }
+    .status-approved { background: #d4edda; color: #155724; }
+    .status-processing { background: #d1ecf1; color: #0c5460; }
+    .status-waiting_return { background: #ffeaa7; color: #6c5ce7; }
+    .status-product_received { background: #a8e6cf; color: #00b894; }
+    .status-quality_check { background: #fab1a0; color: #e17055; }
+    .status-completed { background: #00b894; color: white; }
+    .status-rejected { background: #ff7675; color: white; }
+
+    .refund-type-badge {
+        padding: 0.3rem 0.6rem;
+        border-radius: 15px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .type-cancellation { background: #ffe0b2; color: #f57c00; }
+    .type-return_refund { background: #e1f5fe; color: #0277bd; }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-action {
+        padding: 0.3rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .btn-process {
+        background: #007bff;
+        color: white;
+    }
+
+    .btn-process:hover {
+        background: #0056b3;
+        color: white;
+    }
+
+    .btn-view {
+        background: #6c757d;
+        color: white;
+    }
+
+    .btn-view:hover {
+        background: #495057;
+        color: white;
+    }
+
+    .priority-indicator {
+        width: 8px;
+        height: 100%;
+        position: absolute;
+        left: 0;
+        top: 0;
+        border-radius: 4px 0 0 4px;
+    }
+
+    .priority-high { background: #dc3545; }
+    .priority-medium { background: #ffc107; }
+    .priority-low { background: #28a745; }
+
+    .refund-amount {
+        font-weight: 600;
+        color: #28a745;
+    }
+
+    .customer-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .customer-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #007bff;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+
+    .table-responsive {
+        border-radius: 15px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #6c757d;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="admin-header">
+        <h1 class="mb-3">
+            <i class="fas fa-cogs me-2"></i>
+            Panel de Administración - Reembolsos
+        </h1>
+        <p class="mb-0">Gestiona todas las solicitudes de reembolso y devoluciones</p>
+    </div>
+
+    <!-- Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon pending">
+                <i class="fas fa-clock"></i>
+            </div>
+            <h3>{{ stats.pending }}</h3>
+            <p class="mb-0">Pendientes</p>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon approved">
+                <i class="fas fa-check"></i>
+            </div>
+            <h3>{{ stats.approved }}</h3>
+            <p class="mb-0">Aprobados</p>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon processing">
+                <i class="fas fa-sync"></i>
+            </div>
+            <h3>{{ stats.processing }}</h3>
+            <p class="mb-0">En Proceso</p>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon waiting">
+                <i class="fas fa-truck"></i>
+            </div>
+            <h3>{{ stats.waiting_return }}</h3>
+            <p class="mb-0">Esperando Retorno</p>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-section">
+        <form method="get" class="row align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Estado</label>
+                <select name="status" class="form-select">
+                    <option value="">Todos los estados</option>
+                    <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pendiente</option>
+                    <option value="approved" {% if request.GET.status == 'approved' %}selected{% endif %}>Aprobado</option>
+                    <option value="processing" {% if request.GET.status == 'processing' %}selected{% endif %}>En Proceso</option>
+                    <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Completado</option>
+                    <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>Rechazado</option>
+                    <option value="waiting_return" {% if request.GET.status == 'waiting_return' %}selected{% endif %}>Esperando Retorno</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Tipo</label>
+                <select name="refund_type" class="form-select">
+                    <option value="">Todos los tipos</option>
+                    <option value="cancellation" {% if request.GET.refund_type == 'cancellation' %}selected{% endif %}>Cancelación</option>
+                    <option value="return_refund" {% if request.GET.refund_type == 'return_refund' %}selected{% endif %}>Devolución</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Ordenar por</label>
+                <select name="sort" class="form-select">
+                    <option value="-created_at" {% if request.GET.sort == '-created_at' %}selected{% endif %}>Más recientes</option>
+                    <option value="created_at" {% if request.GET.sort == 'created_at' %}selected{% endif %}>Más antiguos</option>
+                    <option value="-amount" {% if request.GET.sort == '-amount' %}selected{% endif %}>Mayor monto</option>
+                    <option value="amount" {% if request.GET.sort == 'amount' %}selected{% endif %}>Menor monto</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-filter me-2"></i>Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Refunds Table -->
+    <div class="refund-table">
+        {% if refunds %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Cliente</th>
+                        <th>Pedido</th>
+                        <th>Tipo</th>
+                        <th>Monto</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for refund in refunds %}
+                    <tr class="refund-row position-relative">
+                        <!-- Indicador de prioridad -->
+                        <div class="priority-indicator 
+                            {% if refund.created_at|timesince|slice:':1' == '0' %}priority-high
+                            {% elif refund.created_at|timesince|slice:':1' <= '3' %}priority-medium
+                            {% else %}priority-low{% endif %}">
+                        </div>
+                        
+                        <td class="ps-3">
+                            <strong>#{{ refund.id }}</strong>
+                        </td>
+                        
+                        <td>
+                            <div class="customer-info">
+                                <div class="customer-avatar">
+                                    {{ refund.order.customer.name|first|upper }}
+                                </div>
+                                <div>
+                                    <strong>{{ refund.order.customer.name }}</strong><br>
+                                    <small class="text-muted">{{ refund.order.customer.email }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        
+                        <td>
+                            <strong>Pedido #{{ refund.order.id }}</strong><br>
+                            <small class="text-muted">{{ refund.order.date_ordered|date:"d/m/Y" }}</small>
+                        </td>
+                        
+                        <td>
+                            <span class="refund-type-badge 
+                                {% if refund.refund_type == 'cancellation' %}type-cancellation
+                                {% else %}type-return_refund{% endif %}">
+                                {% if refund.refund_type == 'cancellation' %}
+                                    <i class="fas fa-times me-1"></i>Cancelación
+                                {% else %}
+                                    <i class="fas fa-undo me-1"></i>Devolución
+                                {% endif %}
+                            </span>
+                        </td>
+                        
+                        <td>
+                            <span class="refund-amount">${{ refund.amount|floatformat:2 }}</span>
+                            {% if refund.refund_type == 'return_refund' %}
+                                <br><small class="text-muted">(5% comisión)</small>
+                            {% endif %}
+                        </td>
+                        
+                        <td>
+                            <span class="status-badge status-{{ refund.status }}">
+                                {% if refund.status == 'pending' %}Pendiente
+                                {% elif refund.status == 'approved' %}Aprobado
+                                {% elif refund.status == 'processing' %}En Proceso
+                                {% elif refund.status == 'waiting_return' %}Esperando Retorno
+                                {% elif refund.status == 'product_received' %}Producto Recibido
+                                {% elif refund.status == 'quality_check' %}Verificación
+                                {% elif refund.status == 'completed' %}Completado
+                                {% elif refund.status == 'rejected' %}Rechazado
+                                {% endif %}
+                            </span>
+                        </td>
+                        
+                        <td>
+                            <strong>{{ refund.created_at|date:"d/m/Y" }}</strong><br>
+                            <small class="text-muted">{{ refund.created_at|time:"H:i" }}</small>
+                        </td>
+                        
+                        <td>
+                            <div class="action-buttons">
+                                <a href="{% url 'process_refund' refund.id %}" class="btn-action btn-process">
+                                    <i class="fas fa-cog me-1"></i>Procesar
+                                </a>
+                                <a href="{% url 'order_detail' refund.order.id %}" class="btn-action btn-view">
+                                    <i class="fas fa-eye me-1"></i>Ver Pedido
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <h3>No hay reembolsos</h3>
+            <p>No se encontraron solicitudes de reembolso con los filtros aplicados.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Pagination -->
+    {% if refunds.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if refunds.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.refund_type %}&refund_type={{ request.GET.refund_type }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">Primera</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ refunds.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.refund_type %}&refund_type={{ request.GET.refund_type }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">Anterior</a>
+            </li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">{{ refunds.number }} de {{ refunds.paginator.num_pages }}</span>
+            </li>
+
+            {% if refunds.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ refunds.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.refund_type %}&refund_type={{ request.GET.refund_type }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">Siguiente</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ refunds.paginator.num_pages }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.refund_type %}&refund_type={{ request.GET.refund_type }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">Última</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<script>
+// Auto-refresh cada 30 segundos para mantener actualizado el panel
+setInterval(function() {
+    if (!document.hidden) {
+        window.location.reload();
+    }
+}, 30000);
+
+// Confirmation para acciones críticas
+document.querySelectorAll('.btn-process').forEach(button => {
+    button.addEventListener('click', function(e) {
+        const refundId = this.href.split('/').slice(-2, -1)[0];
+        if (!confirm(`¿Deseas procesar el reembolso #${refundId}?`)) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+
+{% endblock %}

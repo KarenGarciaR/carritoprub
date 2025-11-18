@@ -26,7 +26,11 @@
             <h5 class="my-3">{{ user.username }} <i class="bi bi-check2-circle text-success"></i></h5>
             <p class="text-muted mb-1">Usuario</p>
             <div class="text-center mt-4">
-                <a href="{% url 'edit_profile' %}" class="btn btn-secondary rounded-pill">Editar información<i class="bi bi-pencil-square"></i></a>
+                <a href="{% url 'edit_profile' %}" class="btn btn-secondary rounded-pill mb-2">Editar información<i class="bi bi-pencil-square"></i></a>
+                <br>
+                <a href="{% url 'customer_addresses' %}" class="btn btn-outline-primary rounded-pill">
+                    <i class="fas fa-map-marker-alt"></i> Mis Direcciones
+                </a>
             </div>
           </div>        
         </div>

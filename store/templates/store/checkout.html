@@ -458,6 +458,219 @@
         line-height: 1.5;
     }
 
+    /* Address Selection Styles */
+    .address-selection-container {
+        margin-bottom: 2rem;
+    }
+
+    .selection-title {
+        color: var(--primary-color);
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .addresses-grid {
+        display: grid;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .address-option {
+        position: relative;
+    }
+
+    .address-option input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .address-card {
+        display: block;
+        background: white;
+        border: 2px solid #e1e8ed;
+        border-radius: 10px;
+        padding: 1.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin: 0;
+    }
+
+    .address-card:hover {
+        border-color: var(--primary-color);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .address-option input:checked + .address-card {
+        border-color: var(--primary-color);
+        background: rgba(255, 140, 0, 0.05);
+        box-shadow: 0 5px 15px rgba(255, 140, 0, 0.2);
+    }
+
+    .address-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .address-nickname {
+        color: var(--primary-color);
+        font-weight: 600;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .default-badge {
+        background: #28a745;
+        color: white;
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-weight: 500;
+        margin-left: 0.5rem;
+    }
+
+    .address-details {
+        color: var(--text-dark);
+        line-height: 1.5;
+    }
+
+    .address-name {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .address-info {
+        color: var(--text-light);
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .address-full {
+        color: var(--text-dark);
+        margin-bottom: 0.25rem;
+    }
+
+    .address-refs {
+        color: var(--text-light);
+        font-size: 0.85rem;
+        font-style: italic;
+    }
+
+    .address-actions {
+        text-align: center;
+        margin-top: 1rem;
+    }
+
+    .btn-link {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-link:hover {
+        text-decoration: underline;
+        color: var(--primary-color);
+    }
+
+    .new-address-toggle {
+        margin: 2rem 0;
+        padding: 1rem;
+        background: var(--light-bg);
+        border-radius: 10px;
+    }
+
+    .new-address-toggle .form-check-label {
+        color: var(--primary-color);
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .new-address-form {
+        background: white;
+        border: 2px solid var(--primary-color);
+        border-radius: 10px;
+        padding: 2rem;
+        margin-top: 1rem;
+    }
+
+    .first-address-form {
+        background: white;
+        border: 2px solid #17a2b8;
+        border-radius: 10px;
+        padding: 2rem;
+    }
+
+    /* Customer Info Display */
+    .customer-info-display {
+        margin-bottom: 1.5rem;
+    }
+
+    .info-card {
+        background: var(--light-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+    }
+
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .info-item:last-of-type {
+        margin-bottom: 1rem;
+        border-bottom: none;
+    }
+
+    .info-label {
+        font-weight: 600;
+        color: var(--text-color);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .info-label i {
+        color: var(--primary-color);
+        width: 16px;
+    }
+
+    .info-value {
+        font-weight: 500;
+        color: var(--text-muted);
+    }
+
+    .info-actions {
+        text-align: center;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .info-actions .btn {
+        font-size: 0.9rem;
+    }
+
     /* Security Badge */
     .security-badge {
         background: var(--light-bg);
@@ -561,130 +774,313 @@
             <!-- Customer Information Form -->
             <div id="information-step">
                 {% csrf_token %}
-                <form id="form">
-                    <!-- Personal Information -->
+                <form id="form" method="post" novalidate>
+                    {% csrf_token %}
+                    <!-- Customer Summary -->
                     <div class="form-section">
                         <div class="section-header">
                             <div class="section-icon">
-                                <i class="fas fa-user"></i>
+                                <i class="fas fa-user-check"></i>
                             </div>
                             <div class="section-title">
-                                <h3>Información Personal</h3>
-                                <p>Datos básicos para tu pedido</p>
+                                <h3>Información del Cliente</h3>
+                                <p>Datos confirmados de tu perfil</p>
                             </div>
                         </div>
 
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="name" class="form-label">
-                                    <i class="fas fa-user"></i>
-                                    Nombre Completo <span class="required">*</span>
-                                </label>
-                                <input required class="form-control" type="text" id="name" name="name" 
-                                       placeholder="Ej: Juan Pérez García"
-                                       value="{% if customer %}{{ customer.name }}{% endif %}">
-                                <div class="form-help">Nombre como aparece en tu identificación</div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="email" class="form-label">
-                                    <i class="fas fa-envelope"></i>
-                                    Correo Electrónico <span class="required">*</span>
-                                </label>
-                                <input required class="form-control" type="email" id="email" name="email" 
-                                       placeholder="correo@ejemplo.com"
-                                       value="{% if customer %}{{ customer.email }}{% endif %}">
-                                <div class="form-help">Para notificaciones del pedido</div>
+                        <div class="customer-info-display">
+                            <div class="info-card">
+                                <div class="info-item">
+                                    <span class="info-label"><i class="fas fa-user"></i> Nombre:</span>
+                                    <span class="info-value">{{ customer.name|default:customer.user.username }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label"><i class="fas fa-envelope"></i> Email:</span>
+                                    <span class="info-value">{{ customer.email }}</span>
+                                </div>
+                                {% if customer.phone_number %}
+                                <div class="info-item">
+                                    <span class="info-label"><i class="fas fa-phone"></i> Teléfono:</span>
+                                    <span class="info-value">{{ customer.phone_number }}</span>
+                                </div>
+                                {% endif %}
+                                <div class="info-actions">
+                                    <a href="{% url 'profile' %}" class="btn btn-outline-primary btn-sm" target="_blank">
+                                        <i class="fas fa-edit"></i> Editar Perfil
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Shipping Information -->
+                    <!-- Shipping Address Selection -->
                     <div class="form-section" id="shipping-info">
                         <div class="section-header">
                             <div class="section-icon">
                                 <i class="fas fa-truck"></i>
                             </div>
                             <div class="section-title">
-                                <h3>Información de Envío</h3>
-                                <p>Dirección donde recibirás tu pedido</p>
+                                <h3>Dirección de Envío</h3>
+                                <p>Selecciona dónde recibirás tu pedido</p>
                             </div>
                         </div>
 
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="cellphone" class="form-label">
-                                    <i class="fas fa-phone"></i>
-                                    Teléfono de Contacto <span class="required">*</span>
-                                </label>
-                                <input required class="form-control" type="tel" id="cellphone" name="cellphone" 
-                                       placeholder="Ej: 981 123 4567"
-                                       value="{% if customer %}{{ customer.phone_number }}{% endif %}">
-                                <div class="form-help">Para coordinar la entrega</div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="zipcode" class="form-label">
-                                    <i class="fas fa-map-pin"></i>
-                                    Código Postal <span class="required">*</span>
-                                </label>
-                                <input required class="form-control" type="text" id="zipcode" name="zipcode" 
-                                       placeholder="Ej: 24000"
-                                       pattern="[0-9]{5}"
-                                       maxlength="5"
-                                       value="{% if customer %}{{ customer.zip_code }}{% endif %}">
-                                <div class="form-help">5 dígitos numéricos</div>
-                            </div>
-                        </div>
+                        {% if customer_addresses %}
+                            <!-- Existing Addresses -->
+                            <div class="address-selection-container">
+                                <h4 class="selection-title">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    Mis Direcciones Registradas
+                                </h4>
+                                
+                                <div class="addresses-grid">
+                                    {% for address in customer_addresses %}
+                                        <div class="address-option" data-address-id="{{ address.id }}">
+                                            <input type="radio" 
+                                                   name="selected_address" 
+                                                   value="{{ address.id }}" 
+                                                   id="address_{{ address.id }}"
+                                                   {% if address.is_default %}checked{% endif %}>
+                                            <label for="address_{{ address.id }}" class="address-card">
+                                                <div class="address-header">
+                                                    <div class="address-nickname">
+                                                        <i class="fas fa-home"></i>
+                                                        {{ address.nickname }}
+                                                        {% if address.is_default %}
+                                                            <span class="default-badge">Principal</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                <div class="address-details">
+                                                    <div class="address-name">{{ address.full_name }}</div>
+                                                    <div class="address-info">{{ address.phone }}</div>
+                                                    <div class="address-full">{{ address.full_address }}</div>
+                                                    {% if address.references %}
+                                                        <div class="address-refs">{{ address.references|truncatechars:50 }}</div>
+                                                    {% endif %}
+                                                </div>
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
 
-                        <div class="form-grid single">
-                            <div class="form-group">
-                                <label for="address" class="form-label">
-                                    <i class="fas fa-home"></i>
-                                    Dirección Completa <span class="required">*</span>
-                                </label>
-                                <input required class="form-control" type="text" id="address" name="address" 
-                                       placeholder="Ej: Calle 5 de Mayo #123, Colonia Centro"
-                                       value="{% if customer %}{{ customer.address }}{% endif %}">
-                                <div class="form-help">Calle, número, colonia o fraccionamiento</div>
+                                <div class="address-actions">
+                                    <a href="{% url 'customer_addresses' %}" target="_blank" class="btn-link">
+                                        <i class="fas fa-cog"></i>
+                                        Gestionar mis direcciones
+                                    </a>
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="city" class="form-label">
-                                    <i class="fas fa-city"></i>
-                                    Ciudad <span class="required">*</span>
-                                </label>
-                                <input required class="form-control" type="text" id="city" name="city" 
-                                       placeholder="Ej: Campeche"
-                                       value="{% if customer %}{{ customer.municipality }}{% endif %}">
-                                <div class="form-help">Ciudad donde vives</div>
+                            <!-- Option to add new address -->
+                            <div class="new-address-toggle">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="use_new_address" name="use_new_address">
+                                    <label class="form-check-label" for="use_new_address">
+                                        <i class="fas fa-plus"></i>
+                                        Usar una nueva dirección para este pedido
+                                    </label>
+                                </div>
                             </div>
-                            
-                            <div class="form-group">
-                                <label for="state" class="form-label">
-                                    <i class="fas fa-map"></i>
-                                    Estado/Municipio <span class="required">*</span>
-                                </label>
-                                <input required class="form-control" type="text" id="state" name="state" 
-                                       placeholder="Ej: Campeche"
-                                       value="{% if customer %}{{ customer.state }}{% endif %}">
-                                <div class="form-help">Estado o municipio</div>
-                            </div>
-                        </div>
 
-                        <div class="form-grid single">
-                            <div class="form-group">
-                                <label for="referencias" class="form-label">
-                                    <i class="fas fa-map-marked-alt"></i>
-                                    Referencias de Ubicación (Opcional)
-                                </label>
-                                <textarea class="form-control" id="referencias" name="referencias" rows="3"
-                                          placeholder="Ej: Entre las calles Hidalgo y Morelos, casa de color azul, portón café"></textarea>
-                                <div class="form-help">Ayúdanos a encontrar tu dirección más fácilmente</div>
+                            <!-- New address form (hidden by default) -->
+                            <div class="new-address-form" id="new-address-form" style="display: none;">
+                                <h4 class="selection-title">
+                                    <i class="fas fa-plus"></i>
+                                    Nueva Dirección
+                                </h4>
+                                
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="nickname" class="form-label">
+                                            <i class="fas fa-tag"></i>
+                                            Nombre de la dirección <span class="required">*</span>
+                                        </label>
+                                        {{ address_form.nickname }}
+                                        <div class="form-help">Ej: Casa nueva, Oficina, Casa de mamá</div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="full_name" class="form-label">
+                                            <i class="fas fa-user"></i>
+                                            Nombre completo <span class="required">*</span>
+                                        </label>
+                                        {{ address_form.full_name }}
+                                    </div>
+                                </div>
+
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="phone" class="form-label">
+                                            <i class="fas fa-phone"></i>
+                                            Teléfono <span class="required">*</span>
+                                        </label>
+                                        {{ address_form.phone }}
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="zipcode" class="form-label">
+                                            <i class="fas fa-map-pin"></i>
+                                            Código Postal <span class="required">*</span>
+                                        </label>
+                                        {{ address_form.zipcode }}
+                                    </div>
+                                </div>
+
+                                <div class="form-grid single">
+                                    <div class="form-group">
+                                        <label for="address" class="form-label">
+                                            <i class="fas fa-home"></i>
+                                            Dirección completa <span class="required">*</span>
+                                        </label>
+                                        {{ address_form.address }}
+                                    </div>
+                                </div>
+
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="neighborhood" class="form-label">
+                                            <i class="fas fa-map"></i>
+                                            Colonia
+                                        </label>
+                                        {{ address_form.neighborhood }}
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="city" class="form-label">
+                                            <i class="fas fa-city"></i>
+                                            Ciudad <span class="required">*</span>
+                                        </label>
+                                        {{ address_form.city }}
+                                    </div>
+                                </div>
+
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="state" class="form-label">
+                                            <i class="fas fa-map"></i>
+                                            Estado <span class="required">*</span>
+                                        </label>
+                                        {{ address_form.state }}
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <div class="form-check mt-4">
+                                            {{ address_form.is_default }}
+                                            <label class="form-check-label" for="{{ address_form.is_default.id_for_label }}">
+                                                Guardar como dirección principal
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-grid single">
+                                    <div class="form-group">
+                                        <label for="references" class="form-label">
+                                            <i class="fas fa-info-circle"></i>
+                                            Referencias (opcional)
+                                        </label>
+                                        {{ address_form.references }}
+                                        <div class="form-help">Información adicional para encontrar la dirección</div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+
+                        {% else %}
+                            <!-- No addresses - show form to create first address -->
+                            <div class="first-address-form">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i>
+                                    <strong>Primera vez comprando:</strong> Necesitamos tu dirección de envío para continuar.
+                                </div>
+                                
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="nickname" class="form-label">
+                                            <i class="fas fa-tag"></i>
+                                            Nombre de la dirección <span class="required">*</span>
+                                        </label>
+                                        {{ address_form.nickname }}
+                                        <div class="form-help">Ej: Mi Casa, Trabajo</div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="full_name" class="form-label">
+                                            <i class="fas fa-user"></i>
+                                            Nombre completo <span class="required">*</span>
+                                        </label>
+                                        {{ address_form.full_name }}
+                                    </div>
+                                </div>
+
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="phone" class="form-label">
+                                            <i class="fas fa-phone"></i>
+                                            Teléfono <span class="required">*</span>
+                                        </label>
+                                        {{ address_form.phone }}
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="zipcode" class="form-label">
+                                            <i class="fas fa-map-pin"></i>
+                                            Código Postal <span class="required">*</span>
+                                        </label>
+                                        {{ address_form.zipcode }}
+                                    </div>
+                                </div>
+
+                                <div class="form-grid single">
+                                    <div class="form-group">
+                                        <label for="address" class="form-label">
+                                            <i class="fas fa-home"></i>
+                                            Dirección completa <span class="required">*</span>
+                                        </label>
+                                        {{ address_form.address }}
+                                    </div>
+                                </div>
+
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="neighborhood" class="form-label">
+                                            <i class="fas fa-map"></i>
+                                            Colonia
+                                        </label>
+                                        {{ address_form.neighborhood }}
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="city" class="form-label">
+                                            <i class="fas fa-city"></i>
+                                            Ciudad <span class="required">*</span>
+                                        </label>
+                                        {{ address_form.city }}
+                                    </div>
+                                </div>
+
+                                <div class="form-grid single">
+                                    <div class="form-group">
+                                        <label for="state" class="form-label">
+                                            <i class="fas fa-map"></i>
+                                            Estado <span class="required">*</span>
+                                        </label>
+                                        {{ address_form.state }}
+                                    </div>
+                                </div>
+
+                                <div class="form-grid single">
+                                    <div class="form-group">
+                                        <label for="references" class="form-label">
+                                            <i class="fas fa-info-circle"></i>
+                                            Referencias (opcional)
+                                        </label>
+                                        {{ address_form.references }}
+                                        <div class="form-help">Información adicional para encontrar la dirección</div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
                     </div>
 
                     <div class="form-actions">
@@ -720,57 +1116,42 @@
                                 <i class="fas fa-university payment-icon" style="color: #2c3e50;"></i>
                                 <div>
                                     <h4 class="payment-title">Transferencia Bancaria</h4>
-                                    <p class="payment-subtitle">Transferencia o depósito bancario</p>
+                                    <p class="payment-subtitle">Transferencia bancaria electrónica</p>
                                 </div>
                             </div>
                             <p class="payment-description">
-                                Realiza tu pago mediante transferencia bancaria. Te enviaremos los datos 
-                                bancarios por correo electrónico para completar el pago.
+                                Realiza tu pago mediante transferencia bancaria electrónica. Te enviaremos 
+                                los datos bancarios por correo electrónico para completar el pago.
                             </p>
                         </div>
 
-                        <!-- Tarjetas en Línea -->
-                        <div class="payment-option" id="card-payment">
-                            <div class="payment-header">
-                                <i class="fas fa-credit-card payment-icon" style="color: #e74c3c;"></i>
-                                <div>
-                                    <h4 class="payment-title">Tarjetas en Línea</h4>
-                                    <p class="payment-subtitle">Visa, MasterCard, American Express</p>
-                                </div>
-                            </div>
-                            <p class="payment-description">
-                                Pago seguro con tarjeta de crédito o débito. Procesamiento inmediato 
-                                y confirmación instantánea de tu pedido.
-                            </p>
-                        </div>
-
-                        <!-- Pago en Línea -->
-                        <div class="payment-option" id="online-payment">
-                            <div class="payment-header">
-                                <i class="fas fa-mobile-alt payment-icon" style="color: #3498db;"></i>
-                                <div>
-                                    <h4 class="payment-title">Pago en Línea</h4>
-                                    <p class="payment-subtitle">SPEI, Oxxo Pay, transferencias móviles</p>
-                                </div>
-                            </div>
-                            <p class="payment-description">
-                                Paga con tu aplicación bancaria favorita, SPEI inmediato, o en tiendas 
-                                de conveniencia como Oxxo.
-                            </p>
-                        </div>
-
-                        <!-- Depósito Bancario -->
+                        <!-- Depósito en Banco -->
                         <div class="payment-option" id="bank-deposit">
                             <div class="payment-header">
                                 <i class="fas fa-money-check-alt payment-icon" style="color: #27ae60;"></i>
                                 <div>
-                                    <h4 class="payment-title">Depósito Bancario</h4>
+                                    <h4 class="payment-title">Depósito en Banco</h4>
                                     <p class="payment-subtitle">Depósito en sucursal bancaria</p>
                                 </div>
                             </div>
                             <p class="payment-description">
                                 Realiza tu depósito directamente en cualquier sucursal bancaria. 
-                                Recibirás las instrucciones detalladas por correo.
+                                Recibirás las instrucciones detalladas por correo electrónico.
+                            </p>
+                        </div>
+
+                        <!-- Pago en Línea con Tarjetas -->
+                        <div class="payment-option" id="online-payment">
+                            <div class="payment-header">
+                                <i class="fas fa-credit-card payment-icon" style="color: #3498db;"></i>
+                                <div>
+                                    <h4 class="payment-title">Pago en Línea con Tarjetas</h4>
+                                    <p class="payment-subtitle">Visa, MasterCard, SPEI, Oxxo Pay</p>
+                                </div>
+                            </div>
+                            <p class="payment-description">
+                                Pago seguro con tarjeta de crédito/débito, SPEI inmediato, aplicaciones 
+                                bancarias o en tiendas de conveniencia como Oxxo.
                             </p>
                         </div>
                     </div>
@@ -949,31 +1330,60 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Form Validation
     function validateForm() {
-        const requiredFields = ['name', 'email', 'cellphone', 'address', 'city', 'state', 'zipcode'];
+        // Validar campos básicos del cliente
+        const basicFields = ['name', 'email'];
         let isValid = true;
         
-        requiredFields.forEach(fieldName => {
+        basicFields.forEach(fieldName => {
             const field = form[fieldName];
-            const value = field.value.trim();
-            
-            if (!value) {
-                showFieldError(field, `Por favor completa este campo`);
-                isValid = false;
-            } else {
-                clearFieldError(field);
+            if (field) {
+                const value = field.value.trim();
                 
-                // Specific validations
-                if (fieldName === 'email' && !isValidEmail(value)) {
-                    showFieldError(field, 'Por favor ingresa un correo válido');
+                if (!value) {
+                    showFieldError(field, `Por favor completa este campo`);
                     isValid = false;
-                }
-                
-                if (fieldName === 'zipcode' && !/^\d{5}$/.test(value)) {
-                    showFieldError(field, 'El código postal debe tener 5 dígitos');
-                    isValid = false;
+                } else {
+                    clearFieldError(field);
+                    
+                    // Specific validations
+                    if (fieldName === 'email' && !isValidEmail(value)) {
+                        showFieldError(field, 'Por favor ingresa un correo válido');
+                        isValid = false;
+                    }
                 }
             }
         });
+
+        // Validar dirección de envío
+        const useNewAddress = document.getElementById('use_new_address');
+        const selectedAddress = document.querySelector('input[name="selected_address"]:checked');
+        
+        if (useNewAddress && useNewAddress.checked) {
+            // Validar nueva dirección
+            const newAddressFields = ['nickname', 'full_name', 'phone', 'address', 'city', 'state', 'zipcode'];
+            newAddressFields.forEach(fieldName => {
+                const field = document.getElementById('id_' + fieldName);
+                if (field) {
+                    const value = field.value.trim();
+                    
+                    if (!value) {
+                        showFieldError(field, `Por favor completa este campo`);
+                        isValid = false;
+                    } else {
+                        clearFieldError(field);
+                        
+                        if (fieldName === 'zipcode' && !/^\d{5}$/.test(value)) {
+                            showFieldError(field, 'El código postal debe tener 5 dígitos');
+                            isValid = false;
+                        }
+                    }
+                }
+            });
+        } else if (!selectedAddress) {
+            // Si no hay dirección seleccionada ni nueva dirección
+            alert('Por favor selecciona una dirección de envío o agrega una nueva.');
+            isValid = false;
+        }
         
         return isValid;
     }
@@ -1040,17 +1450,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 buttonIcon = 'fas fa-university';
                 buttonText = 'Confirmar Transferencia';
                 break;
-            case 'card-payment':
-                buttonIcon = 'fas fa-credit-card';
-                buttonText = 'Pagar con Tarjeta';
-                break;
-            case 'online-payment':
-                buttonIcon = 'fas fa-mobile-alt';
-                buttonText = 'Pago en Línea';
-                break;
             case 'bank-deposit':
                 buttonIcon = 'fas fa-money-check-alt';
                 buttonText = 'Confirmar Depósito';
+                break;
+            case 'online-payment':
+                buttonIcon = 'fas fa-credit-card';
+                buttonText = 'Pagar en Línea con Tarjetas';
                 break;
             default:
                 buttonIcon = 'fas fa-check';
@@ -1079,22 +1485,58 @@ document.addEventListener('DOMContentLoaded', function () {
         makePaymentBtn.disabled = true;
 
         const userFormData = {
-            'name': form.name.value,
-            'email': form.email.value,
+            'name': form.name ? form.name.value : '',
+            'email': form.email ? form.email.value : '',
             'total': total,
             'payment_method': paymentMethod
         };
 
-        const shippingInfo = {
-            'cellphone': form.cellphone.value,
-            'address': form.address.value,
-            'city': form.city.value,
-            'state': form.state.value,
-            'zipcode': form.zipcode.value,
-            'referencias': form.referencias ? form.referencias.value : ''
-        };
+        // Get shipping info from selected address or new address form
+        let shippingInfo = {};
+        const useNewAddress = document.getElementById('use_new_address');
+        const selectedAddress = document.querySelector('input[name="selected_address"]:checked');
+        
+        if (useNewAddress && useNewAddress.checked) {
+            // Use new address form data
+            shippingInfo = {
+                'selected_address': null,
+                'use_new_address': true,
+                'nickname': document.getElementById('id_nickname') ? document.getElementById('id_nickname').value : '',
+                'full_name': document.getElementById('id_full_name') ? document.getElementById('id_full_name').value : '',
+                'phone': document.getElementById('id_phone') ? document.getElementById('id_phone').value : '',
+                'address': document.getElementById('id_address') ? document.getElementById('id_address').value : '',
+                'neighborhood': document.getElementById('id_neighborhood') ? document.getElementById('id_neighborhood').value : '',
+                'city': document.getElementById('id_city') ? document.getElementById('id_city').value : '',
+                'state': document.getElementById('id_state') ? document.getElementById('id_state').value : '',
+                'zipcode': document.getElementById('id_zipcode') ? document.getElementById('id_zipcode').value : '',
+                'references': document.getElementById('id_references') ? document.getElementById('id_references').value : '',
+                'is_default': document.getElementById('id_is_default') ? document.getElementById('id_is_default').checked : false
+            };
+        } else if (selectedAddress) {
+            // Use selected existing address
+            shippingInfo = {
+                'selected_address': selectedAddress.value,
+                'use_new_address': false
+            };
+        } else {
+            // First-time user with no addresses - use form data
+            shippingInfo = {
+                'selected_address': null,
+                'use_new_address': true,
+                'nickname': document.getElementById('id_nickname') ? document.getElementById('id_nickname').value : '',
+                'full_name': document.getElementById('id_full_name') ? document.getElementById('id_full_name').value : '',
+                'phone': document.getElementById('id_phone') ? document.getElementById('id_phone').value : '',
+                'address': document.getElementById('id_address') ? document.getElementById('id_address').value : '',
+                'neighborhood': document.getElementById('id_neighborhood') ? document.getElementById('id_neighborhood').value : '',
+                'city': document.getElementById('id_city') ? document.getElementById('id_city').value : '',
+                'state': document.getElementById('id_state') ? document.getElementById('id_state').value : '',
+                'zipcode': document.getElementById('id_zipcode') ? document.getElementById('id_zipcode').value : '',
+                'references': document.getElementById('id_references') ? document.getElementById('id_references').value : '',
+                'is_default': document.getElementById('id_is_default') ? document.getElementById('id_is_default').checked : true
+            };
+        }
 
-        const url = '/process_order/';
+        const url = '/checkout/';
         fetch(url, {
             method: 'POST',
             headers: {
@@ -1201,23 +1643,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 color: '#2c3e50',
                 message: 'Recibirás los datos bancarios por correo electrónico. Una vez realizada la transferencia, tu pedido será procesado en 1-2 horas hábiles.'
             },
-            'card-payment': {
-                title: 'Pago con Tarjeta',
-                icon: 'fas fa-credit-card',
-                color: '#e74c3c',  
-                message: 'Tu pago ha sido procesado exitosamente. La transacción aparecerá en tu estado de cuenta como "ALM Refaccionaria".'
-            },
-            'online-payment': {
-                title: 'Pago en Línea',
-                icon: 'fas fa-mobile-alt',
-                color: '#3498db',
-                message: 'Tu pago ha sido confirmado. Si elegiste pagar en Oxxo, recibirás el código de barras por correo electrónico.'
-            },
             'bank-deposit': {
-                title: 'Depósito Bancario',
+                title: 'Depósito en Banco',
                 icon: 'fas fa-money-check-alt',
                 color: '#27ae60',
-                message: 'Recibirás las instrucciones para realizar el depósito por correo. Tu pedido será procesado al confirmar el depósito.'
+                message: 'Recibirás las instrucciones para realizar el depósito por correo electrónico. Tu pedido será procesado al confirmar el depósito.'
+            },
+            'online-payment': {
+                title: 'Pago en Línea con Tarjetas',
+                icon: 'fas fa-credit-card',
+                color: '#3498db',
+                message: 'Pago seguro con tarjetas de crédito/débito, SPEI inmediato o en tiendas como Oxxo. Tu pedido será procesado inmediatamente.'
             }
         };
         
@@ -1243,6 +1679,72 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         return cookieValue;
+    }
+
+    // Address Selection Functionality
+    const useNewAddressCheckbox = document.getElementById('use_new_address');
+    const newAddressForm = document.getElementById('new-address-form');
+    const addressRadios = document.querySelectorAll('input[name="selected_address"]');
+
+    // Function to toggle required attributes
+    function toggleNewAddressRequiredFields(enable) {
+        const newAddressFields = ['nickname', 'full_name', 'phone', 'address', 'city', 'state', 'zipcode'];
+        newAddressFields.forEach(fieldName => {
+            const field = document.getElementById('id_' + fieldName);
+            if (field) {
+                if (enable) {
+                    field.setAttribute('required', 'required');
+                } else {
+                    field.removeAttribute('required');
+                }
+            }
+        });
+    }
+
+    if (useNewAddressCheckbox && newAddressForm) {
+        // Initially disable required for hidden fields
+        toggleNewAddressRequiredFields(false);
+        
+        useNewAddressCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                newAddressForm.style.display = 'block';
+                toggleNewAddressRequiredFields(true);
+                // Deselect all existing addresses
+                addressRadios.forEach(radio => {
+                    radio.checked = false;
+                });
+                // Scroll to the new address form
+                newAddressForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                newAddressForm.style.display = 'none';
+                toggleNewAddressRequiredFields(false);
+                // Re-select the default address if available
+                const defaultAddress = document.querySelector('input[name="selected_address"]:checked');
+                if (!defaultAddress && addressRadios.length > 0) {
+                    addressRadios[0].checked = true;
+                }
+            }
+        });
+    }
+
+    // When an existing address is selected, uncheck "use new address"
+    addressRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.checked && useNewAddressCheckbox) {
+                useNewAddressCheckbox.checked = false;
+                if (newAddressForm) {
+                    newAddressForm.style.display = 'none';
+                    toggleNewAddressRequiredFields(false);
+                }
+            }
+        });
+    });
+
+    // Handle case when there are no existing addresses (first-time user)
+    const firstAddressForm = document.querySelector('.first-address-form');
+    if (firstAddressForm) {
+        // Enable required fields for first-time address form
+        toggleNewAddressRequiredFields(true);
     }
 
     // Real-time validation

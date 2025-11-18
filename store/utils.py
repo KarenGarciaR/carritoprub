@@ -45,9 +45,16 @@ def cartData(request):
     if request.user.is_authenticated:
         try:
             customer = request.user.customer
-            order, created = Order.objects.get_or_create(customer=customer, complete=False)
-            items = order.orderitem_set.all()
-            cartItems = order.get_cart_items
+            # Solo buscar órdenes existentes, no crear nuevas automáticamente
+            order = Order.objects.filter(customer=customer, complete=False).first()
+            if order:
+                items = order.orderitem_set.all()
+                cartItems = order.get_cart_items
+            else:
+                # No hay orden activa, devolver datos vacíos
+                items = []
+                order = {'get_cart_total': 0, 'get_cart_items': 0, 'shipping': False}
+                cartItems = 0
         except Customer.DoesNotExist:
             items = []
             order = {'get_cart_total': 0, 'get_cart_items': 0, 'shipping': False}

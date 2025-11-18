@@ -1,0 +1,375 @@
+{% extends 'store/base.html' %}
+{% load static %}
+{% load store_extras %}
+
+{% block title %}Solicitar Reembolso - Pedido #{{ order.id }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .refund-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .refund-header {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        color: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .refund-type-card {
+        border: 2px solid #e9ecef;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        transition: all 0.3s;
+    }
+
+    .refund-type-card.cancellation {
+        border-color: #ffc107;
+        background: #fff8e1;
+    }
+
+    .refund-type-card.return {
+        border-color: #17a2b8;
+        background: #e1f5fe;
+    }
+
+    .form-section {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .reason-option {
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .reason-option:hover {
+        border-color: #007bff;
+        background: #f8f9fa;
+    }
+
+    .reason-option input[type="radio"] {
+        margin-right: 1rem;
+    }
+
+    .reason-option.selected {
+        border-color: #007bff;
+        background: #e3f2fd;
+    }
+
+    .timeline-step {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .step-number {
+        width: 30px;
+        height: 30px;
+        background: #007bff;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 1rem;
+        flex-shrink: 0;
+    }
+
+    .btn-submit-refund {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 1rem 3rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.2s;
+    }
+
+    .btn-submit-refund:hover {
+        background: #c82333;
+        transform: translateY(-1px);
+    }
+
+    .warning-box {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .info-box {
+        background: #d1ecf1;
+        border: 1px solid #bee5eb;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="refund-container">
+    <!-- Header -->
+    <div class="refund-header">
+        <h1 class="mb-3">
+            <i class="fas fa-undo me-2"></i>
+            Solicitar Reembolso
+        </h1>
+        <p class="mb-0">Pedido #{{ order.id }} - ${{ order.get_cart_total_with_iva|floatformat:2 }}</p>
+    </div>
+
+    <!-- Tipo de Reembolso -->
+    {% if can_cancel %}
+    <div class="refund-type-card cancellation">
+        <div class="d-flex align-items-center mb-3">
+            <i class="fas fa-times-circle fa-2x text-warning me-3"></i>
+            <div>
+                <h3 class="mb-1">Cancelación Simple</h3>
+                <p class="mb-0 text-muted">Tu pedido aún no ha salido de la bodega</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <strong>✅ Ventajas:</strong>
+                <ul class="mt-2">
+                    <li>Reembolso completo inmediato</li>
+                    <li>Sin comisiones</li>
+                    <li>Proceso rápido (3-5 días)</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <strong>📋 Proceso:</strong>
+                <ol class="mt-2">
+                    <li>Cancelación inmediata</li>
+                    <li>Reembolso automático</li>
+                    <li>Notificación por email</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if requires_return %}
+    <div class="refund-type-card return">
+        <div class="d-flex align-items-center mb-3">
+            <i class="fas fa-undo fa-2x text-info me-3"></i>
+            <div>
+                <h3 class="mb-1">Devolución con Retorno</h3>
+                <p class="mb-0 text-muted">El producto ya fue enviado o entregado</p>
+            </div>
+        </div>
+        
+        <div class="warning-box">
+            <h5><i class="fas fa-exclamation-triangle me-2"></i>Importante:</h5>
+            <ul class="mb-0">
+                <li><strong>Comisión del 5%</strong> por gastos de manejo y envío</li>
+                <li><strong>15 días</strong> para devolver el producto</li>
+                <li>El producto debe estar en <strong>perfecto estado</strong></li>
+                <li>Empaque original requerido</li>
+            </ul>
+        </div>
+
+        <h5>📦 Proceso de Devolución:</h5>
+        <div class="timeline-step">
+            <div class="step-number">1</div>
+            <div>
+                <strong>Solicitar Devolución</strong><br>
+                <small>Completa este formulario con el motivo</small>
+            </div>
+        </div>
+        <div class="timeline-step">
+            <div class="step-number">2</div>
+            <div>
+                <strong>Empaque el Producto</strong><br>
+                <small>En su caja original con todos los accesorios</small>
+            </div>
+        </div>
+        <div class="timeline-step">
+            <div class="step-number">3</div>
+            <div>
+                <strong>Coordinamos Recolección</strong><br>
+                <small>Te contactaremos para programar la recolección</small>
+            </div>
+        </div>
+        <div class="timeline-step">
+            <div class="step-number">4</div>
+            <div>
+                <strong>Verificación de Calidad</strong><br>
+                <small>Revisamos que el producto esté en buen estado</small>
+            </div>
+        </div>
+        <div class="timeline-step">
+            <div class="step-number">5</div>
+            <div>
+                <strong>Reembolso Procesado</strong><br>
+                <small>Se procesa el reembolso menos la comisión del 5%</small>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Formulario de Solicitud -->
+    <form method="post" class="form-section">
+        {% csrf_token %}
+        
+        <h4 class="mb-4">
+            <i class="fas fa-clipboard-list me-2"></i>
+            Información de la Solicitud
+        </h4>
+
+        <!-- Motivo del Reembolso -->
+        <div class="mb-4">
+            <label class="form-label"><strong>¿Cuál es el motivo de tu solicitud?</strong></label>
+            
+            <div class="reason-option" onclick="selectReason('changed_mind', this)">
+                <input type="radio" name="reason" value="changed_mind" id="reason_changed_mind">
+                <label for="reason_changed_mind" class="mb-0">
+                    <strong>Cambié de opinión</strong><br>
+                    <small class="text-muted">Ya no necesito el producto</small>
+                </label>
+            </div>
+
+            <div class="reason-option" onclick="selectReason('wrong_product', this)">
+                <input type="radio" name="reason" value="wrong_product" id="reason_wrong_product">
+                <label for="reason_wrong_product" class="mb-0">
+                    <strong>Producto incorrecto</strong><br>
+                    <small class="text-muted">Recibí un producto diferente al pedido</small>
+                </label>
+            </div>
+
+            <div class="reason-option" onclick="selectReason('defective', this)">
+                <input type="radio" name="reason" value="defective" id="reason_defective">
+                <label for="reason_defective" class="mb-0">
+                    <strong>Producto defectuoso</strong><br>
+                    <small class="text-muted">El producto llegó dañado o no funciona</small>
+                </label>
+            </div>
+
+            <div class="reason-option" onclick="selectReason('not_as_described', this)">
+                <input type="radio" name="reason" value="not_as_described" id="reason_not_as_described">
+                <label for="reason_not_as_described" class="mb-0">
+                    <strong>No como se describía</strong><br>
+                    <small class="text-muted">El producto no coincide con la descripción</small>
+                </label>
+            </div>
+
+            <div class="reason-option" onclick="selectReason('damaged_shipping', this)">
+                <input type="radio" name="reason" value="damaged_shipping" id="reason_damaged_shipping">
+                <label for="reason_damaged_shipping" class="mb-0">
+                    <strong>Dañado en envío</strong><br>
+                    <small class="text-muted">El producto se dañó durante el transporte</small>
+                </label>
+            </div>
+
+            <div class="reason-option" onclick="selectReason('other', this)">
+                <input type="radio" name="reason" value="other" id="reason_other">
+                <label for="reason_other" class="mb-0">
+                    <strong>Otro motivo</strong><br>
+                    <small class="text-muted">Especifica en los comentarios</small>
+                </label>
+            </div>
+        </div>
+
+        <!-- Comentarios adicionales -->
+        <div class="mb-4">
+            <label for="customer_notes" class="form-label">
+                <strong>Comentarios adicionales (opcional)</strong>
+            </label>
+            <textarea name="customer_notes" id="customer_notes" class="form-control" rows="4" 
+                placeholder="Describe con más detalle el problema o tu solicitud..."></textarea>
+            <small class="form-text text-muted">
+                Esta información nos ayudará a procesar tu solicitud más rápidamente.
+            </small>
+        </div>
+
+        <!-- Resumen del Reembolso -->
+        <div class="info-box">
+            <h5><i class="fas fa-calculator me-2"></i>Resumen del Reembolso</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Total del pedido:</strong> ${{ order.get_cart_total_with_iva|floatformat:2 }}
+                </div>
+                <div class="col-md-6">
+                    {% if can_cancel %}
+                        <strong>Reembolso estimado:</strong> ${{ order.get_cart_total_with_iva|floatformat:2 }}
+                        <br><small class="text-success">Sin comisiones</small>
+                    {% else %}
+                        <strong>Comisión (5%):</strong> ${{ order.get_cart_total_with_iva|mul:0.05|floatformat:2 }}
+                        <br><strong>Reembolso estimado:</strong> ${{ order.get_cart_total_with_iva|mul:0.95|floatformat:2 }}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones -->
+        <div class="text-center">
+            <button type="submit" class="btn-submit-refund me-3">
+                <i class="fas fa-paper-plane me-2"></i>
+                Enviar Solicitud
+            </button>
+            <a href="{% url 'order_detail' order.id %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+function selectReason(value, element) {
+    // Remover selección previa
+    document.querySelectorAll('.reason-option').forEach(el => {
+        el.classList.remove('selected');
+    });
+    
+    // Agregar selección actual
+    element.classList.add('selected');
+    
+    // Marcar el radio button
+    document.getElementById('reason_' + value).checked = true;
+}
+
+// Validar formulario antes de enviar
+document.querySelector('form').addEventListener('submit', function(e) {
+    const selectedReason = document.querySelector('input[name="reason"]:checked');
+    
+    if (!selectedReason) {
+        e.preventDefault();
+        alert('Por favor selecciona un motivo para tu solicitud.');
+        return false;
+    }
+    
+    // Confirmación final
+    const isCancel = {{ can_cancel|yesno:"true,false" }};
+    const message = isCancel ? 
+        '¿Confirmas que deseas cancelar este pedido? El reembolso se procesará automáticamente.' :
+        '¿Confirmas que deseas solicitar la devolución? Te contactaremos para coordinar la recolección del producto.';
+    
+    if (!confirm(message)) {
+        e.preventDefault();
+        return false;
+    }
+});
+</script>
+
+{% endblock %}

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+
 """
 Script de inicialización para el admin mejorado de ALM Refaccionaria
 """
