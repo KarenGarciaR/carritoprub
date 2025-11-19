@@ -35,3 +35,24 @@ admin.site.register(Order, OrderAdmin)
 admin.site.register(OrderHistory, OrderHistoryAdmin)
 admin.site.register(OrderItem, OrderItemAdmin)
 admin.site.register(ShippingAddress, ShippingAddressAdmin)
+
+# Registrar modelos adicionales
+admin.site.register(CustomerAddress, CustomerAddressAdmin)
+admin.site.register(Refund, RefundAdmin)
+
+# Importar y registrar el admin del carrusel
+try:
+    from .carousel_admin import CarouselSlideAdmin
+    admin.site.register(CarouselSlide, CarouselSlideAdmin)
+    print("✅ CarouselSlide registrado en admin_init.py")
+except Exception as e:
+    print(f"❌ Error registrando CarouselSlide en admin_init: {e}")
+
+# Registrar otros modelos básicos
+try:
+    admin.site.register(Personalizacion)
+    admin.site.register(Comment)
+    admin.site.register(Notification)
+    print("✅ Modelos adicionales registrados correctamente")
+except Exception as e:
+    print(f"❌ Error registrando modelos adicionales: {e}")

@@ -1,0 +1,107 @@
+/* Estilos para el admin del carrusel */
+.carousel-admin-fieldset {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.carousel-admin-fieldset h2 {
+    background: linear-gradient(45deg, #007bff, #0056b3);
+    color: white;
+    padding: 8px 15px;
+    margin: -15px -15px 15px -15px;
+    border-radius: 5px 5px 0 0;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.field-image_preview_large img {
+    border: 2px solid #007bff;
+    box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+    transition: transform 0.3s ease;
+}
+
+.field-image_preview_large img:hover {
+    transform: scale(1.05);
+}
+
+.carousel-color-field {
+    display: inline-block;
+    margin-right: 15px;
+}
+
+.carousel-color-field input[type="text"] {
+    width: 80px !important;
+    height: 35px;
+    padding: 5px 10px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+}
+
+.carousel-help-text {
+    background: #e8f4f8;
+    border-left: 4px solid #007bff;
+    padding: 10px 15px;
+    margin: 10px 0;
+    border-radius: 0 5px 5px 0;
+    font-style: italic;
+    color: #0056b3;
+}
+
+/* Estilos para la vista de lista */
+.carousel-slide-preview {
+    border-radius: 3px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.carousel-slide-active {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.carousel-slide-inactive {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+/* Mejorar el formulario de imagen */
+.field-image .form-row {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    border: 2px dashed #007bff;
+    transition: border-color 0.3s ease;
+}
+
+.field-image .form-row:hover {
+    border-color: #0056b3;
+    background: #e8f4f8;
+}
+
+.field-image input[type="file"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.field-image .help {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    padding: 8px 12px;
+    border-radius: 4px;
+    margin-top: 8px;
+    font-size: 12px;
+    color: #856404;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .field-image_preview_large img {
+        max-width: 100% !important;
+        height: auto !important;
+    }
+}

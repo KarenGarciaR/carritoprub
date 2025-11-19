@@ -370,10 +370,11 @@ class RefundAdmin(admin.ModelAdmin):
     )
     
     def order_info(self, obj):
+        total = float(obj.order.get_cart_total_with_iva)
         return format_html(
-            '<strong>Pedido #{}</strong><br><small>${:.2f}</small>',
+            '<strong>Pedido #{}</strong><br><small>${}</small>',
             obj.order.id,
-            float(obj.order.get_cart_total_with_iva)
+            "{:.2f}".format(total)
         )
     order_info.short_description = 'Pedido'
     
