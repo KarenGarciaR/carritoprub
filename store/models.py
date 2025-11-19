@@ -1,5 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
+import os
+from django.utils.text import slugify
+from django.utils import timezone
 
 MEXICAN_STATES = [
     ('AGU', 'Aguascalientes'),
@@ -398,13 +401,29 @@ class Refund(models.Model):
         verbose_name = "Reembolso"
         verbose_name_plural = "Reembolsos"
 
+
+# ... todos tus otros modelos ...
+
+def carousel_image_path(instance, filename):
+    """
+    Genera una ruta única para las imágenes del carrusel
+    Sanitiza el nombre del archivo eliminando espacios y caracteres especiales
+    """
+    ext = filename.split('.')[-1]
+    base_filename = os.path.splitext(filename)[0]
+    safe_filename = slugify(base_filename)
+    timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
+    final_filename = f"{safe_filename}_{timestamp}.{ext}"
+    return os.path.join('carousel_slides', final_filename)
+
+
 class CarouselSlide(models.Model):
     """Modelo para slides del carrusel de la página principal"""
     
     title = models.CharField(max_length=200, verbose_name="Título")
     subtitle = models.CharField(max_length=300, blank=True, null=True, verbose_name="Subtítulo")
     description = models.TextField(blank=True, null=True, verbose_name="Descripción")
-    image = models.ImageField(upload_to='carousel/', verbose_name="Imagen")
+    image = models.ImageField(upload_to=carousel_image_path, verbose_name="Imagen")
     
     # Enlaces y botones
     button_text = models.CharField(max_length=50, blank=True, null=True, verbose_name="Texto del botón")
@@ -472,3 +491,4 @@ class CarouselSlide(models.Model):
         ordering = ['order', '-created_at']
         verbose_name = "Slide del Carrusel"
         verbose_name_plural = "Slides del Carrusel"
+
