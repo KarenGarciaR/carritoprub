@@ -136,7 +136,7 @@ input[name="order"] {
 
 /* Mejorar la tabla de lista */
 #result_list th {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    background: linear-gradient(135deg, #ffffff 0%, #ffffff 0%) !important;
     color: white !important;
     font-weight: bold;
 }

@@ -182,48 +182,88 @@
     .values-grid {
         max-width: 1200px;
         margin: 0 auto;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 2rem;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 24px;
+        padding: 0 12px;
     }
 
     .value-card {
         background: white;
-        padding: 2.5rem;
-        border-radius: 15px;
+        padding: 28px 26px;
+        border-radius: 14px;
         text-align: center;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-        transition: all 0.3s ease;
+        box-shadow: 0 18px 40px rgba(0,0,0,0.12);
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        flex: 0 1 320px; /* responsive fixed card width */
+        max-width: 340px;
+        min-height: 360px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
     }
 
     .value-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 15px 40px rgba(255, 140, 0, 0.2);
+        transform: translateY(-8px);
+        box-shadow: 0 26px 70px rgba(0,0,0,0.18);
     }
 
     .value-icon {
-        width: 80px;
-        height: 80px;
+        width: 84px;
+        height: 84px;
         background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 0 auto 1.5rem;
-        font-size: 2rem;
+        margin: 0 0 14px 0;
+        font-size: 1.6rem;
         color: white;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.12);
     }
 
     .value-card h3 {
-        font-size: 1.5rem;
-        margin-bottom: 1rem;
+        font-size: 1.25rem;
+        margin: 0 0 6px 0;
         color: var(--text-dark);
+        text-align: center;
+        font-weight:700;
     }
 
     .value-card p {
         color: var(--text-light);
         line-height: 1.6;
         text-align: left;
+        margin: 6px 0;
+        font-size: 0.95rem;
+        width: 100%;
+        max-width: 280px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* Emphasize labels inside the card */
+    .value-card p strong,
+    .value-card p b {
+        color: var(--primary-color);
+        font-weight: 700;
+        display: inline-block;
+        min-width: 82px;
+    }
+
+    /* When only one card, make content centered visually */
+    @media (min-width: 900px) {
+        .values-grid > .value-card:only-child {
+            width: 80%;
+            max-width: 1000px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 42px 56px;
+            min-height: 360px;
+        }
     }
 
     .value-card a {
@@ -243,11 +283,9 @@
         border-radius: 15px;
         overflow: hidden;
         box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        height: 400px;
-        background:rgba(44, 44, 84, 0.9);
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        height: auto;
+        background: transparent;
+        display: block;
         color: var(--text-light);
     }
 
@@ -259,6 +297,74 @@
         font-size: 4rem;
         margin-bottom: 1rem;
         color: var(--primary-color);
+    }
+
+    .map-overlay {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        background: rgba(255,255,255,0.95);
+        color: #222;
+        padding: 10px 14px;
+        border-radius: 8px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+        max-width: 46%;
+        font-size: 0.95rem;
+        line-height: 1.25;
+    }
+
+    @media (max-width: 768px) {
+        .map-overlay { max-width: 80%; left: 8px; top: 8px; padding: 8px 10px; }
+    }
+
+    /* New map card style: map left, info right */
+    .map-card {
+        display: flex;
+        background: transparent;
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.10);
+        align-items: stretch;
+    }
+
+    .map-card .map-frame {
+        flex: 1 1 60%;
+        min-width: 260px;
+        height: 320px;
+        overflow: hidden;
+    }
+
+    .map-card .map-frame iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
+        display: block;
+    }
+
+    .map-card .map-info {
+        flex: 0 0 36%;
+        background: rgba(44,44,84,0.98);
+        color: white;
+        padding: 28px 26px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+    }
+
+    .map-card .map-info h3 {
+        margin: 0 0 8px 0;
+        font-size: 1.35rem;
+        color: #fff;
+        font-weight: 700;
+    }
+
+    .map-card .map-info p { color: rgba(255,255,255,0.95); margin: 0; }
+
+    @media (max-width: 900px) {
+        .map-card { flex-direction: column; }
+        .map-card .map-frame { height: 260px; }
+        .map-card .map-info { padding: 18px; }
     }
 
     @media (max-width: 768px) {
@@ -392,96 +498,99 @@
     </div>
     
     <div class="values-grid" style="max-width: 1200px;">
+        {% for branch in branches %}
         <div class="value-card">
             <div class="value-icon">
-                <i class="fas fa-store"></i>
+                {% if branch.is_main %}
+                    <i class="fas fa-star"></i>
+                {% elif branch.is_active %}
+                    <i class="fas fa-store"></i>
+                {% else %}
+                    <i class="fas fa-hammer"></i>
+                {% endif %}
             </div>
-            <h3>Sucursal Campeche</h3>
-            <p><strong>Dirección:</strong><br>
-            Fracc. Bello Horizonte, Mza G, Lote 16<br>
-            Entre Niza y Capri<br>
-            C.P. 24070, Campeche, Campeche</p>
-            <p><strong>Contacto:</strong><br>
-            📧 <a href="mailto:ventascampeche@refaccionariaalmeyda.com.mx">ventascampeche@refaccionariaalmeyda.com.mx</a><br>
-            📱 <a href="https://wa.me/529811602276">981 160 22 76</a></p>
-            <p><strong>Horarios:</strong><br>
-            Lunes a Viernes: 8:00 AM - 6:00 PM<br>
-            Sábados: 8:00 AM - 2:00 PM</p>
+            <h3>{{ branch.name }}</h3>
+            
+            {% if branch.is_active %}
+                <p><strong>Dirección:</strong><br>
+                {{ branch.address }}<br>
+                {% if branch.neighborhood %}{{ branch.neighborhood }}<br>{% endif %}
+                {{ branch.city }}, {{ branch.get_state_display }}<br>
+                C.P. {{ branch.zipcode }}</p>
+                
+                <p><strong>Contacto:</strong><br>
+                📧 <a href="mailto:{{ branch.email }}">{{ branch.email }}</a><br>
+                {% if branch.whatsapp %}
+                📱 <a href="https://wa.me/{{ branch.whatsapp|cut:' '|cut:'+'|cut:'-' }}" target="_blank">{{ branch.phone }}</a>
+                {% else %}
+                📱 {{ branch.phone }}
+                {% endif %}
+                </p>
+                
+                <p><strong>Horarios:</strong><br>
+                {{ branch.schedule|linebreaks }}</p>
+                
+                {% if branch.total_products > 0 %}
+                <p><strong>Inventario:</strong><br>
+                {{ branch.total_products }} productos disponibles<br>
+                {{ branch.total_stock }} unidades en stock</p>
+                {% endif %}
+            {% else %}
+                <p><strong>Estado:</strong><br>
+                <span style="color: var(--primary-color); font-weight: 600; font-size: 1.2rem;">¡PRÓXIMAMENTE!</span></p>
+                
+                <p><strong>Ubicación:</strong><br>
+                {{ branch.city }}, {{ branch.get_state_display }}</p>
+                
+                <p><strong>Información:</strong><br>
+                Muy pronto abriremos nuestras puertas<br>
+                para brindarles el mejor servicio</p>
+                
+                <p><strong>Mientras tanto:</strong><br>
+                Contáctanos en nuestras otras sucursales<br>
+                para atender tus necesidades</p>
+            {% endif %}
         </div>
-
+        {% empty %}
         <div class="value-card">
-            <div class="value-icon">
-                <i class="fas fa-store"></i>
-            </div>
-            <h3>Sucursal Escárcega</h3>
-            <p><strong>Dirección:</strong><br>
-            Av. Justo Sierra, M 329<br>
-            Fte. de Elektra<br>
-            C.P. 24350, Escárcega, Campeche</p>
-            <p><strong>Contacto:</strong><br>
-            📧 <a href="mailto:ventasescarcega@refaccionariaalmeyda.com.mx">ventasescarcega@refaccionariaalmeyda.com.mx</a><br>
-            📱 <a href="https://wa.me/529821169040">982 116 90 40</a></p>
-            <p><strong>Servicios:</strong><br>
-            • Refacciones especializadas<br>
-            • Atención personalizada</p>
+            <p>No hay sucursales registradas actualmente.</p>
         </div>
-
-        <div class="value-card">
-            <div class="value-icon">
-                <i class="fas fa-hammer"></i>
-            </div>
-            <h3>Sucursal Champotón</h3>
-            <p><strong>Estado:</strong><br>
-            <span style="color: var(--primary-color); font-weight: 600; font-size: 1.2rem;">¡PRÓXIMAMENTE!</span></p>
-            <p><strong>Ubicación:</strong><br>
-            Champotón, Campeche</p>
-            <p><strong>Información:</strong><br>
-            Muy pronto abriremos nuestras puertas<br>
-            para brindarles el mejor servicio</p>
-            <p><strong>Mientras tanto:</strong><br>
-            Contáctanos en nuestras otras sucursales<br>
-            para atender tus necesidades</p>
-        </div>
+        {% endfor %}
     </div>
 </section>
 
 <!-- Maps Section -->
 <section class="map-section">
-    <div class="section-title" style="margin-bottom: 3rem;">
+    <div class="section-title" style="margin-bottom: 1.5rem;">
         <h2 style="color: white;">Ubicaciones en Mapa</h2>
         <div class="underline"></div>
     </div>
-    
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem; max-width: 1200px; margin: 0 auto;">
-        <!-- Mapa Campeche -->
-        <div class="map-container" style="height: 350px;">
-            <iframe 
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3781.234!2d-90.7406864!3d19.8403!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85f89c8c8c8c8c8c%3A0x1234567890abcdef!2sFracc.%20Bello%20Horizonte%2C%20Campeche!5e0!3m2!1ses!2smx!4v1699999999999!5m2!1ses!2smx"
-                style="border:0; width: 100%; height: 100%; border-radius: 15px;" 
-                allowfullscreen="" 
-                loading="lazy" 
-                referrerpolicy="no-referrer-when-downgrade">
-            </iframe>
-            <div style="text-align: center; margin-top: 1rem; color: white;">
-                <h4>Sucursal Campeche</h4>
-                <p>Fracc. Bello Horizonte, Mza G, Lote 16</p>
-            </div>
-        </div>
 
-        <!-- Mapa Escárcega -->
-        <div class="map-container" style="height: 350px;">
-            <iframe 
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3781.234!2d-90.7406864!3d18.6067!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85f89c8c8c8c8c8c%3A0x1234567890abcdef!2sAv.%20Justo%20Sierra%2C%20Esc%C3%A1rcega%2C%20Campeche!5e0!3m2!1ses!2smx!4v1699999999999!5m2!1ses!2smx"
-                style="border:0; width: 100%; height: 100%; border-radius: 15px;" 
-                allowfullscreen="" 
-                loading="lazy" 
-                referrerpolicy="no-referrer-when-downgrade">
-            </iframe>
-            <div style="text-align: center; margin-top: 1rem; color: white;">
-                <h4>Sucursal Escárcega</h4>
-                <p>Av. Justo Sierra, M 329, Fte. de Elektra</p>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem; max-width: 1200px; margin: 0 auto;">
+        {% for branch in branches %}
+        {% if branch.is_active and branch.latitude and branch.longitude %}
+        <!-- Mapa {{ branch.name }} -->
+        <div style="text-align: center;">
+            <div class="map-card">
+                <div class="map-frame">
+                    <iframe
+                        src="https://maps.google.com/maps?q={{ branch.latitude }},{{ branch.longitude }}&z=15&output=embed"
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade">
+                    </iframe>
+                </div>
+                <div class="map-info">
+                    <h3>{{ branch.name }}</h3>
+                    <p>{{ branch.address }}{% if branch.neighborhood %}, {{ branch.neighborhood }}{% endif %}</p>
+                    <p style="margin-top:8px;">{{ branch.city }}, {{ branch.get_state_display }}</p>
+                    {% if branch.phone %}
+                    <p style="margin-top:10px;"><a href="tel:{{ branch.phone }}" style="color: #ffb366; text-decoration:underline;">{{ branch.phone }}</a></p>
+                    {% endif %}
+                </div>
             </div>
         </div>
+        {% endif %}
+        {% endfor %}
     </div>
 </section>
 {% endblock %}

@@ -1,0 +1,31 @@
+/* store/static/admin/css/branch_admin.css */
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+.field-map_preview iframe {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.field-quick_actions a {
+    margin: 2px;
+    display: inline-block;
+}
+
+/* Mejorar la tabla de productos inline */
+.inline-related {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Badges más bonitos */
+[class*="badge"] {
+    display: inline-block;
+    white-space: nowrap;
+}

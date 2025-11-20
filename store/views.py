@@ -7,6 +7,8 @@ import datetime
 from django.utils import timezone
 from decimal import Decimal
 from .models import * 
+from .models import Branch, ProductBranch
+from django.db.models import Sum, Count
 from .utils import cookieCart, cartData, guestOrder
 from .forms import ProductEditForm, SignupForm, LoginForm, CustomerAddressForm
 from django.contrib.auth import logout as auth_logout
@@ -1534,3 +1536,111 @@ def process_refund(request, refund_id):
         'refund': refund,
     }
     return render(request, 'store/process_refund.html', context)
+
+
+def contacto(request):
+    """Vista de contacto con sucursales dinámicas"""
+    if request.method == 'POST':
+        # Tu código existente para procesar el formulario
+        nombre = request.POST.get('nombre')
+        email = request.POST.get('email')
+        telefono = request.POST.get('telefono')
+        mensaje = request.POST.get('mensaje')
+        
+        # Aquí podrías enviar un email o guardar en base de datos
+        messages.success(request, '¡Mensaje enviado exitosamente! Nos pondremos en contacto pronto.')
+        return redirect('contacto')
+    
+    # Obtener todas las sucursales activas
+    branches = Branch.objects.filter(is_active=True).order_by('-is_main', 'name')
+    
+    context = {
+        'branches': branches,
+        'cartItems': 0  # Ajusta según tu lógica de carrito
+    }
+    
+    return render(request, 'store/contacto.html', context)
+
+
+def get_product_availability(request, product_id):
+    """API endpoint para obtener disponibilidad de un producto por sucursal"""
+    try:
+        product = Product.objects.get(id=product_id)
+        
+        # Obtener inventario por sucursal
+        availability = ProductBranch.objects.filter(
+            product=product,
+            branch__is_active=True
+        ).select_related('branch').values(
+            'branch__name',
+            'branch__code',
+            'branch__city',
+            'branch__phone',
+            'stock_quantity',
+            'location_code'
+        )
+        
+        data = {
+            'product': product.name,
+            'total_stock': sum(item['stock_quantity'] for item in availability),
+            'availability': list(availability)
+        }
+        
+        return JsonResponse(data)
+    
+    except Product.DoesNotExist:
+        return JsonResponse({'error': 'Producto no encontrado'}, status=404)
+
+
+def branch_list(request):
+    """Vista para listar todas las sucursales (API o página)"""
+    branches = Branch.objects.filter(is_active=True).annotate(
+        total_products=Count('product_branches'),
+        total_stock=Sum('product_branches__stock_quantity')
+    ).order_by('-is_main', 'name')
+    
+    # Si es una petición AJAX, devolver JSON
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        data = [{
+            'id': branch.id,
+            'name': branch.name,
+            'code': branch.code,
+            'address': branch.full_address,
+            'phone': branch.phone,
+            'whatsapp': branch.whatsapp,
+            'email': branch.email,
+            'schedule': branch.schedule,
+            'is_main': branch.is_main,
+            'total_products': branch.total_products,
+            'total_stock': branch.total_stock,
+            'latitude': float(branch.latitude) if branch.latitude else None,
+            'longitude': float(branch.longitude) if branch.longitude else None,
+        } for branch in branches]
+        
+        return JsonResponse({'branches': data})
+    
+    # Si no, renderizar template
+    context = {
+        'branches': branches,
+        'cartItems': 0
+    }
+    return render(request, 'store/branches.html', context)
+
+
+def branch_detail(request, branch_id):
+    """Vista detallada de una sucursal con su inventario"""
+    branch = get_object_or_404(Branch, id=branch_id, is_active=True)
+    
+    # Obtener productos disponibles en esta sucursal
+    products_in_branch = ProductBranch.objects.filter(
+        branch=branch,
+        stock_quantity__gt=0
+    ).select_related('product').order_by('-stock_quantity')
+    
+    context = {
+        'branch': branch,
+        'products': products_in_branch,
+        'cartItems': 0
+    }
+    
+    return render(request, 'store/branch_detail.html', context)

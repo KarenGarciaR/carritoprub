@@ -56,3 +56,11 @@ try:
     print("✅ Modelos adicionales registrados correctamente")
 except Exception as e:
     print(f"❌ Error registrando modelos adicionales: {e}")
+
+# Registrar sucursales (Branch) y su inventario en el admin personalizado
+try:
+    admin.site.register(Branch, globals().get('BranchAdmin'))
+    admin.site.register(ProductBranch, globals().get('ProductBranchAdmin'))
+    print("✅ Branch y ProductBranch registrados en admin_init.py")
+except Exception as e:
+    print(f"❌ Error registrando Branch/ProductBranch en admin_init: {e}")

@@ -6,7 +6,28 @@ from django.db.models import Q
 from django.utils import timezone
 from .models import *
 from .models import CarouselSlide  # Importación explícita
+from .models import Branch, ProductBranch
 import datetime
+
+
+# Importar TODOS los modelos
+from .models import (
+    Customer, 
+    ShippingAddress, 
+    Order, 
+    OrderItem, 
+    Product, 
+    Comment, 
+    Notification,
+    CustomerAddress, 
+    Personalizacion, 
+    Refund, 
+    OrderHistory,
+    CarouselSlide,
+    Branch,
+    ProductBranch
+)
+
 
 # Importar admin específico del carrusel
 try:
@@ -15,12 +36,27 @@ try:
 except ImportError as e:
     print(f"❌ Error importando admin de carrusel: {e}")
 
-# Configuración del sitio de administración
+# Importar admin específico de sucursales
+import importlib.util
+if importlib.util.find_spec('store.branch_admin') is not None:
+    try:
+        from . import branch_admin
+        print("✅ Admin de sucursales importado correctamente")
+    except Exception as e:
+        print(f"❌ Error importando admin de sucursales: {e}")
+
+
+# ==============================================================================
+# CONFIGURACIÓN DEL SITIO DE ADMINISTRACIÓN
+# ==============================================================================
 admin.site.site_header = "🚗 ALM Refaccionaria - Panel de Administración"
 admin.site.site_title = "ALM Admin"
 admin.site.index_title = "Gestión de E-commerce"
 
-# Filtros personalizados
+
+# ==============================================================================
+# FILTROS PERSONALIZADOS
+# ==============================================================================
 class OrderDateFilter(admin.SimpleListFilter):
     title = 'Fecha de pedido'
     parameter_name = 'date_range'
@@ -45,7 +81,10 @@ class OrderDateFilter(admin.SimpleListFilter):
         elif self.value() == 'pending':
             return queryset.filter(complete=False)
 
-# Admin para Customer
+
+# ==============================================================================
+# ADMIN PARA CUSTOMER
+# ==============================================================================
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
     list_display = ['name', 'email', 'user', 'phone_number', 'total_orders', 'last_order']
@@ -64,7 +103,53 @@ class CustomerAdmin(admin.ModelAdmin):
         return 'Sin pedidos'
     last_order.short_description = 'Último Pedido'
 
-# Admin para Product
+
+# ==============================================================================
+# INLINES PARA PRODUCTBRANCH
+# ==============================================================================
+
+# Inline para ProductBranch (usado en ProductAdmin)
+class ProductBranchInlineForProduct(admin.TabularInline):
+    model = ProductBranch
+    extra = 1
+    fields = ['branch', 'stock_quantity', 'min_stock', 'location_code']
+    verbose_name = "Inventario en Sucursal"
+    verbose_name_plural = "Inventario por Sucursales"
+
+
+# Inline para ProductBranch (usado en BranchAdmin)
+class ProductBranchInlineForBranch(admin.TabularInline):
+    model = ProductBranch
+    extra = 1
+    fields = ['product', 'stock_quantity', 'min_stock', 'max_stock', 'location_code', 'stock_status_display']
+    readonly_fields = ['stock_status_display']
+    verbose_name = "Producto en Inventario"
+    verbose_name_plural = "Inventario de Productos"
+    
+    def stock_status_display(self, obj):
+        """Mostrar estado del stock con colores"""
+        if not obj.stock_quantity:
+            return format_html(
+                '<span style="background-color: #dc3545; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">Sin Stock</span>'
+            )
+        elif obj.min_stock and obj.stock_quantity <= obj.min_stock:
+            return format_html(
+                '<span style="background-color: #ffc107; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">Stock Bajo</span>'
+            )
+        elif obj.max_stock and obj.stock_quantity >= obj.max_stock:
+            return format_html(
+                '<span style="background-color: #17a2b8; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">Exceso</span>'
+            )
+        else:
+            return format_html(
+                '<span style="background-color: #28a745; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">Normal</span>'
+            )
+    stock_status_display.short_description = 'Estado Stock'
+
+
+# ==============================================================================
+# ADMIN PARA PRODUCT
+# ==============================================================================
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = ['name', 'price', 'quantity', 'stock_status', 'category', 'seller', 'product_image']
@@ -72,6 +157,7 @@ class ProductAdmin(admin.ModelAdmin):
     search_fields = ['name', 'description']
     list_editable = ['price', 'quantity']
     ordering = ['-id']
+    inlines = [ProductBranchInlineForProduct]
     
     def stock_status(self, obj):
         if obj.quantity <= 0:
@@ -91,7 +177,10 @@ class ProductAdmin(admin.ModelAdmin):
         return "Sin imagen"
     product_image.short_description = 'Imagen'
 
-# Inline para OrderItem
+
+# ==============================================================================
+# INLINES PARA ORDER
+# ==============================================================================
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
@@ -102,12 +191,15 @@ class OrderItemInline(admin.TabularInline):
         return "${:.2f}".format(total)
     get_total.short_description = 'Total Item'
 
-# Inline para ShippingAddress
+
 class ShippingAddressInline(admin.StackedInline):
     model = ShippingAddress
     extra = 0
 
-# Admin para Order
+
+# ==============================================================================
+# ADMIN PARA ORDER
+# ==============================================================================
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = ['id', 'customer_info', 'order_total', 'status_badge', 'payment_method_display', 'complete', 'date_ordered', 'order_actions']
@@ -180,7 +272,10 @@ class OrderAdmin(admin.ModelAdmin):
         )
     order_actions.short_description = 'Acciones'
 
-# Acciones masivas para OrderHistory
+
+# ==============================================================================
+# ACCIONES MASIVAS PARA ORDERHISTORY
+# ==============================================================================
 def mark_as_processing(modeladmin, request, queryset):
     updated = queryset.update(status='processing')
     for order_history in queryset:
@@ -206,7 +301,10 @@ def mark_as_delivered(modeladmin, request, queryset):
     modeladmin.message_user(request, f'{updated} pedidos marcados como "Entregado".')
 mark_as_delivered.short_description = '✅ Marcar como Entregado'
 
-# Admin para OrderHistory
+
+# ==============================================================================
+# ADMIN PARA ORDERHISTORY
+# ==============================================================================
 @admin.register(OrderHistory)
 class OrderHistoryAdmin(admin.ModelAdmin):
     list_display = ['order_info', 'customer_name', 'status', 'status_badge', 'payment_method_badge', 'created_at', 'quick_actions']
@@ -295,14 +393,20 @@ class OrderHistoryAdmin(admin.ModelAdmin):
     class Media:
         js = ('admin/js/order_status_updater.js',)
 
-# Admin para OrderItem
+
+# ==============================================================================
+# ADMIN PARA ORDERITEM
+# ==============================================================================
 @admin.register(OrderItem)
 class OrderItemAdmin(admin.ModelAdmin):
     list_display = ['product', 'order', 'quantity', 'get_total', 'date_added']
     list_filter = ['date_added', 'product__category']
     search_fields = ['product__name', 'order__customer__name']
 
-# Admin para CustomerAddress
+
+# ==============================================================================
+# ADMIN PARA CUSTOMERADDRESS
+# ==============================================================================
 @admin.register(CustomerAddress)
 class CustomerAddressAdmin(admin.ModelAdmin):
     list_display = ['customer', 'nickname', 'full_name', 'city', 'state', 'is_default', 'created_at']
@@ -326,7 +430,10 @@ class CustomerAddressAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('customer')
 
-# Admin para ShippingAddress
+
+# ==============================================================================
+# ADMIN PARA SHIPPINGADDRESS
+# ==============================================================================
 @admin.register(ShippingAddress)
 class ShippingAddressAdmin(admin.ModelAdmin):
     list_display = ['customer', 'order', 'get_customer_address', 'city', 'state', 'zipcode', 'date_added']
@@ -346,7 +453,33 @@ class ShippingAddressAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('customer', 'order', 'customer_address')
 
-# Admin para Refund
+
+# ==============================================================================
+# ACCIONES MASIVAS PARA REFUND
+# ==============================================================================
+def approve_refunds(modeladmin, request, queryset):
+    updated = 0
+    for refund in queryset.filter(status='pending'):
+        refund.status = 'approved'
+        refund.save()
+        updated += 1
+    modeladmin.message_user(request, f'{updated} reembolsos aprobados.')
+approve_refunds.short_description = '✅ Aprobar reembolsos seleccionados'
+
+def reject_refunds(modeladmin, request, queryset):
+    updated = 0
+    for refund in queryset.filter(status='pending'):
+        refund.status = 'rejected'
+        refund.processed_at = timezone.now()
+        refund.save()
+        updated += 1
+    modeladmin.message_user(request, f'{updated} reembolsos rechazados.')
+reject_refunds.short_description = '❌ Rechazar reembolsos seleccionados'
+
+
+# ==============================================================================
+# ADMIN PARA REFUND
+# ==============================================================================
 @admin.register(Refund)
 class RefundAdmin(admin.ModelAdmin):
     list_display = ['id', 'order_info', 'customer_name', 'refund_type_badge', 'refund_amount', 'status_badge', 'reason_display', 'requested_at', 'refund_actions']
@@ -354,6 +487,7 @@ class RefundAdmin(admin.ModelAdmin):
     search_fields = ['order__customer__name', 'order__customer__email', 'order__id', 'customer_notes', 'admin_notes']
     list_per_page = 25
     readonly_fields = ['order', 'refund_amount', 'requested_at', 'processed_at']
+    actions = [approve_refunds, reject_refunds]
     
     fieldsets = (
         ('Información del Reembolso', {
@@ -458,40 +592,153 @@ class RefundAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('order', 'order__customer')
 
-# Acciones masivas para Refund
-def approve_refunds(modeladmin, request, queryset):
+
+# ==============================================================================
+# ADMIN PARA BRANCH
+# ==============================================================================
+@admin.register(Branch)
+class BranchAdmin(admin.ModelAdmin):
+    list_display = ['name', 'code', 'city', 'state', 'phone', 'is_main_badge', 'is_active', 'total_products']
+    list_filter = ['is_active', 'is_main', 'state', 'city']
+    search_fields = ['name', 'code', 'city', 'address', 'email', 'manager']
+    list_editable = ['is_active']
+    inlines = [ProductBranchInlineForBranch]
+    ordering = ['-is_main', 'name']
+    
+    fieldsets = (
+        ('Información Básica', {
+            'fields': ('name', 'code', 'is_active', 'is_main', 'manager')
+        }),
+        ('Dirección', {
+            'fields': ('address', 'neighborhood', 'city', 'state', 'zipcode')
+        }),
+        ('Contacto', {
+            'fields': ('phone', 'whatsapp', 'email', 'schedule')
+        }),
+        ('Ubicación GPS', {
+            'fields': ('latitude', 'longitude'),
+            'description': 'Coordenadas GPS para mostrar en mapas. Usa el mapa interactivo abajo para elegir la ubicación.'
+        }),
+    )
+    
+    def is_main_badge(self, obj):
+        if obj.is_main:
+            return format_html(
+                '<span style="background-color: #007bff; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">⭐ Principal</span>'
+            )
+        return format_html(
+            '<span style="color: #6c757d; font-size: 11px;">Secundaria</span>'
+        )
+    is_main_badge.short_description = 'Tipo'
+    
+    def total_products(self, obj):
+        """Mostrar total de productos en esta sucursal"""
+        count = ProductBranch.objects.filter(branch=obj).count()
+        return format_html(
+            '<span style="font-weight: bold;">{}</span> productos',
+            count
+        )
+    total_products.short_description = 'Inventario'
+
+    class Media:
+        css = {
+            'all': (
+                'https://unpkg.com/leaflet@1.9.3/dist/leaflet.css',
+            )
+        }
+        js = (
+            'https://unpkg.com/leaflet@1.9.3/dist/leaflet.js',
+            'https://unpkg.com/axios/dist/axios.min.js',
+            'store/js/admin_branch_map.js',
+        )
+
+
+# ==============================================================================
+# ACCIONES MASIVAS PARA PRODUCTBRANCH
+# ==============================================================================
+def set_low_stock_alert(modeladmin, request, queryset):
+    """Marcar productos con stock bajo el mínimo"""
     updated = 0
-    for refund in queryset.filter(status='pending'):
-        refund.status = 'approved'
-        refund.save()
-        updated += 1
-    modeladmin.message_user(request, f'{updated} reembolsos aprobados.')
-approve_refunds.short_description = '✅ Aprobar reembolsos seleccionados'
+    for pb in queryset:
+        if pb.min_stock and pb.stock_quantity <= pb.min_stock:
+            # Aquí podrías crear una notificación o enviar un email
+            updated += 1
+    modeladmin.message_user(request, f'{updated} productos con stock bajo detectados.')
+set_low_stock_alert.short_description = '⚠️ Alertar Stock Bajo'
 
-def reject_refunds(modeladmin, request, queryset):
-    updated = 0
-    for refund in queryset.filter(status='pending'):
-        refund.status = 'rejected'
-        refund.processed_at = timezone.now()
-        refund.save()
-        updated += 1
-    modeladmin.message_user(request, f'{updated} reembolsos rechazados.')
-reject_refunds.short_description = '❌ Rechazar reembolsos seleccionados'
+def bulk_update_min_stock(modeladmin, request, queryset):
+    """Actualizar stock mínimo en masa (ejemplo: 10 unidades)"""
+    updated = queryset.update(min_stock=10)
+    modeladmin.message_user(request, f'{updated} productos actualizados con stock mínimo de 10.')
+bulk_update_min_stock.short_description = '📊 Establecer Stock Mínimo (10)'
 
-# Agregar las acciones al admin
-RefundAdmin.actions = [approve_refunds, reject_refunds]
 
-# Admin para CarouselSlide - COMENTADO (se usa carousel_admin.py)
-# class CarouselSlideAdmin(admin.ModelAdmin):
-#     list_display = ['title', 'slide_type', 'is_active', 'order', 'created_at']
-#     list_filter = ['slide_type', 'is_active', 'created_at']
-#     search_fields = ['title', 'subtitle']
-#     list_editable = ['is_active', 'order']
-#     ordering = ['order', '-created_at']
+# ==============================================================================
+# ADMIN PARA PRODUCTBRANCH
+# ==============================================================================
+@admin.register(ProductBranch)
+class ProductBranchAdmin(admin.ModelAdmin):
+    list_display = ['product_name', 'branch_name', 'stock_quantity', 'min_stock', 'max_stock', 'stock_status_display', 'location_code']
+    list_filter = ['branch', 'product__category']
+    search_fields = ['product__name', 'branch__name', 'branch__code', 'location_code']
+    list_editable = ['stock_quantity', 'min_stock', 'max_stock', 'location_code']
+    list_per_page = 50
+    ordering = ['branch', 'product__name']
+    actions = [set_low_stock_alert, bulk_update_min_stock]
+    
+    fieldsets = (
+        ('Producto y Sucursal', {
+            'fields': ('product', 'branch')
+        }),
+        ('Inventario', {
+            'fields': ('stock_quantity', 'min_stock', 'max_stock', 'location_code')
+        }),
+    )
+    
+    def product_name(self, obj):
+        return format_html(
+            '<strong>{}</strong><br><small style="color: #6c757d;">{}</small>',
+            obj.product.name,
+            obj.product.category or 'Sin categoría'
+        )
+    product_name.short_description = 'Producto'
+    
+    def branch_name(self, obj):
+        badge = '⭐' if obj.branch.is_main else ''
+        return format_html(
+            '{} <strong>{}</strong><br><small style="color: #6c757d;">{}</small>',
+            badge,
+            obj.branch.name,
+            obj.branch.code
+        )
+    branch_name.short_description = 'Sucursal'
+    
+    def stock_status_display(self, obj):
+        """Mostrar estado del stock"""
+        if not obj.stock_quantity or obj.stock_quantity == 0:
+            return format_html(
+                '<span style="background-color: #dc3545; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">❌ Sin Stock</span>'
+            )
+        elif obj.min_stock and obj.stock_quantity <= obj.min_stock:
+            return format_html(
+                '<span style="background-color: #ffc107; color: #000; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">⚠️ Bajo</span>'
+            )
+        elif obj.max_stock and obj.stock_quantity >= obj.max_stock:
+            return format_html(
+                '<span style="background-color: #17a2b8; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">📦 Exceso</span>'
+            )
+        else:
+            return format_html(
+                '<span style="background-color: #28a745; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">✅ Normal</span>'
+            )
+    stock_status_display.short_description = 'Estado'
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('product', 'branch')
 
-# # Registro manual del admin
-# try:
-#     admin.site.register(CarouselSlide, CarouselSlideAdmin)
-#     print("✅ CarouselSlide registrado correctamente en admin")
-# except Exception as e:
-#     print(f"❌ Error registrando CarouselSlide: {e}")
+
+# ==============================================================================
+# MENSAJES DE CONFIRMACIÓN
+# ==============================================================================
+print("✅ Admin de Sucursales registrado correctamente")
+print("✅ Admin completo cargado exitosamente")

@@ -59,6 +59,135 @@ class Customer(models.Model):
     def __str__(self):
         return self.name if self.name else self.email
 
+
+# Agregar al models.py después de Customer y antes de Product
+
+class Branch(models.Model):
+    """Modelo para gestionar las sucursales de la refaccionaria"""
+    
+    name = models.CharField(max_length=200, verbose_name="Nombre de la Sucursal")
+    code = models.CharField(max_length=20, unique=True, verbose_name="Código de Sucursal")
+    
+    # Dirección completa
+    address = models.CharField(max_length=300, verbose_name="Dirección")
+    neighborhood = models.CharField(max_length=100, verbose_name="Colonia", blank=True, null=True)
+    city = models.CharField(max_length=100, verbose_name="Ciudad")
+    state = models.CharField(max_length=3, choices=MEXICAN_STATES, verbose_name="Estado")
+    zipcode = models.CharField(max_length=10, verbose_name="Código Postal")
+    
+    # Contacto
+    phone = models.CharField(max_length=20, verbose_name="Teléfono")
+    whatsapp = models.CharField(max_length=20, blank=True, null=True, verbose_name="WhatsApp")
+    email = models.EmailField(verbose_name="Email")
+    
+    # Horarios
+    schedule = models.TextField(verbose_name="Horario de Atención", 
+                               help_text="Ej: Lunes a Viernes 8:00-18:00")
+    
+    # Responsable
+    manager = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                               verbose_name="Encargado", related_name='managed_branches')
+    
+    # Estado
+    is_active = models.BooleanField(default=True, verbose_name="Activa")
+    is_main = models.BooleanField(default=False, verbose_name="Sucursal Principal")
+    
+    # Coordenadas para mapa
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True,
+                                  verbose_name="Latitud")
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True,
+                                   verbose_name="Longitud")
+    
+    # Fechas
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-is_main', 'name']
+        verbose_name = "Sucursal"
+        verbose_name_plural = "Sucursales"
+    
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+    
+    @property
+    def full_address(self):
+        """Devuelve la dirección completa formateada"""
+        parts = [self.address]
+        if self.neighborhood:
+            parts.append(self.neighborhood)
+        parts.extend([self.city, self.get_state_display(), f"CP {self.zipcode}"])
+        return ", ".join(parts)
+    
+    @property
+    def total_products(self):
+        """Cuenta el total de productos en esta sucursal"""
+        return self.product_branches.count()
+    
+    @property
+    def total_stock(self):
+        """Suma el stock total de todos los productos en esta sucursal"""
+        return self.product_branches.aggregate(
+            total=models.Sum('stock_quantity')
+        )['total'] or 0
+
+
+class ProductBranch(models.Model):
+    """Modelo para gestionar el inventario de productos por sucursal"""
+    
+    product = models.ForeignKey('Product', on_delete=models.CASCADE, 
+                               related_name='branch_inventory')
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE,
+                              related_name='product_branches')
+    stock_quantity = models.IntegerField(default=0, verbose_name="Cantidad en Stock")
+    min_stock = models.IntegerField(default=5, verbose_name="Stock Mínimo")
+    max_stock = models.IntegerField(default=100, verbose_name="Stock Máximo")
+    
+    # Ubicación física en la sucursal
+    location_code = models.CharField(max_length=50, blank=True, null=True,
+                                    verbose_name="Código de Ubicación",
+                                    help_text="Ej: Pasillo A, Estante 3")
+    
+    # Fechas
+    last_restock_date = models.DateTimeField(null=True, blank=True,
+                                            verbose_name="Última Reposición")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['branch__name', 'product__name']
+        verbose_name = "Inventario por Sucursal"
+        verbose_name_plural = "Inventarios por Sucursal"
+        unique_together = ['product', 'branch']
+    
+    def __str__(self):
+        return f"{self.product.name} - {self.branch.name} ({self.stock_quantity} unidades)"
+    
+    @property
+    def needs_restock(self):
+        """Verifica si necesita reabastecimiento"""
+        return self.stock_quantity <= self.min_stock
+    
+    @property
+    def stock_status(self):
+        """Devuelve el estado del stock"""
+        if self.stock_quantity == 0:
+            return "sin_stock"
+        elif self.stock_quantity <= self.min_stock:
+            return "bajo"
+        elif self.stock_quantity >= self.max_stock:
+            return "exceso"
+        return "normal"
+    
+    @property
+    def stock_percentage(self):
+        """Calcula el porcentaje de stock vs capacidad máxima"""
+        if self.max_stock == 0:
+            return 0
+        return (self.stock_quantity / self.max_stock) * 100
+    
+    
+
 class Product(models.Model):
     CATEGORY_CHOICES = [
         ('Sujeción y Soporte', 'Sujeción y Soporte'),

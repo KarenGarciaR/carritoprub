@@ -19,6 +19,7 @@ from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
 from store.views import custom_admin_index
+from store import views 
 
 # Personalizar el admin
 admin.site.site_header = "🚗 ALM Refaccionaria - Panel de Administración"
@@ -32,6 +33,9 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('admin-custom/', custom_admin_index, name='custom_admin'),
     path('', include('store.urls')),
+    path('branches/', views.branch_list, name='branch_list'),
+    path('branches/<int:branch_id>/', views.branch_detail, name='branch_detail'),
+    path('api/product/<int:product_id>/availability/', views.get_product_availability, name='product_availability'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
